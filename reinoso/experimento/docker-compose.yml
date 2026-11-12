@@ -1,0 +1,52 @@
+x-redis-node: &redis-node
+  image: redis:7.2
+  command: >
+    redis-server
+    --cluster-enabled yes
+    --cluster-config-file nodes.conf
+    --cluster-node-timeout 5000
+    --appendonly yes
+
+services:
+  redis1:
+    <<: *redis-node
+    container_name: redis1
+    networks:
+      redisnet:
+        ipv4_address: 172.30.0.11
+  redis2:
+    <<: *redis-node
+    container_name: redis2
+    networks:
+      redisnet:
+        ipv4_address: 172.30.0.12
+  redis3:
+    <<: *redis-node
+    container_name: redis3
+    networks:
+      redisnet:
+        ipv4_address: 172.30.0.13
+  redis4:
+    <<: *redis-node
+    container_name: redis4
+    networks:
+      redisnet:
+        ipv4_address: 172.30.0.14
+  redis5:
+    <<: *redis-node
+    container_name: redis5
+    networks:
+      redisnet:
+        ipv4_address: 172.30.0.15
+  redis6:
+    <<: *redis-node
+    container_name: redis6
+    networks:
+      redisnet:
+        ipv4_address: 172.30.0.16
+
+networks:
+  redisnet:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

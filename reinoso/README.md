@@ -1,4 +1,4 @@
-# TA-IND-01 — Informe académico individual: análisis crítico de Apache Cassandra
+# TA-IND-01 — Informe académico individual: análisis crítico de Redis
 
 | Campo | Dato |
 |---|---|
@@ -9,8 +9,8 @@
 | Actividad | TA-IND-01 — Informe académico individual: análisis crítico de un sistema distribuido real |
 | Estudiante | Eduardo David Reinoso Vélez |
 | Paralelo | A (7mo nivel) |
-| Sistema analizado | Apache Cassandra |
-| Sistema comparado | Amazon DynamoDB |
+| Sistema analizado | Redis (modo Redis Cluster) |
+| Sistema comparado | Memcached |
 | Repositorio | https://github.com/NixonPiguave/app-dist-TA-IND-01- (carpeta `reinoso/`) |
 
 ## Video de sustentación
@@ -51,15 +51,17 @@ El primer `pdflatex` genera los archivos auxiliares, `biber` procesa `referencia
 
 ## Reproducción del experimento
 
-Requisitos: Docker Desktop con Docker Compose y unos 4 GB de RAM libres.
+Requisitos: Docker Desktop con Docker Compose.
+
+Desde la carpeta `experimento/`:
 
 ```bash
-cd experimento
 docker compose up -d
-docker exec cass1 nodetool status
+docker exec redis1 redis-cli --cluster create 172.30.0.11:6379 172.30.0.12:6379 172.30.0.13:6379 172.30.0.14:6379 172.30.0.15:6379 172.30.0.16:6379 --cluster-replicas 1 --cluster-yes
+docker exec redis1 redis-cli cluster nodes
 ```
 
-Los comandos completos que usé y las salidas obtenidas están en `experimento/comandos.md` y `experimento/resultados.md`.
+El primer comando levanta 6 nodos Redis en modo cluster, el segundo los une en 3 maestros con una réplica cada uno y el tercero lista el estado del clúster. Los comandos completos que usé y las salidas obtenidas están en `experimento/comandos.md` y `experimento/resultados.md`.
 
 ## Declaración de uso de inteligencia artificial
 
