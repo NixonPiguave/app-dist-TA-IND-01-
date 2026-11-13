@@ -1,0 +1,27 @@
+﻿NAME           IMAGE                COMMAND                                                        SERVICE   CREATED          STATUS          PORTS
+nats-nixon-1   nats:2.15.3-alpine   "docker-entrypoint.sh -js -sd /data -m 8222 -n nats-nixon-1"   nats1     12 minutes ago   Up 12 minutes   127.0.0.1:4222->4222/tcp, 127.0.0.1:8222->8222/tcp
+nats-nixon-1  | [1] 2026/11/13 05:52:44.585784 [INF] Starting nats-server
+nats-nixon-1  | [1] 2026/11/13 05:52:44.585867 [INF]   Version:  2.15.3
+nats-nixon-1  | [1] 2026/11/13 05:52:44.585871 [INF]   Git:      [2a9066e]
+nats-nixon-1  | [1] 2026/11/13 05:52:44.585874 [INF]   Name:     nats-nixon-1
+nats-nixon-1  | [1] 2026/11/13 05:52:44.585877 [INF]   Node:     kmAGXqg7
+nats-nixon-1  | [1] 2026/11/13 05:52:44.585878 [INF]   ID:       NC75PR3OQ7PISOE5CMKMCHJSA67D6KJLOF354QEJJZESBGAEEDFVJTHX
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589166 [INF] Starting http monitor on 0.0.0.0:8222
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589351 [INF] Starting JetStream
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589915 [INF]     _ ___ _____ ___ _____ ___ ___   _   __  __
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589946 [INF]  _ | | __|_   _/ __|_   _| _ \ __| /_\ |  \/  |
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589950 [INF] | || | _|  | | \__ \ | | |   / _| / _ \| |\/| |
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589951 [INF]  \__/|___| |_| |___/ |_| |_|_\___/_/ \_\_|  |_|
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589953 [INF] 
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589954 [INF]          https://docs.nats.io/jetstream
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589956 [INF] 
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589957 [INF] ---------------- JETSTREAM ----------------
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589959 [INF]   Strict:          true
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589962 [INF]   Max Memory:      5.79 GB
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589964 [INF]   Max Storage:     715.67 GB
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589966 [INF]   Store Directory: "/data/jetstream"
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589967 [INF]   API Level:       5
+nats-nixon-1  | [1] 2026/11/13 05:52:44.589969 [INF] -------------------------------------------
+nats-nixon-1  | [1] 2026/11/13 05:52:44.590866 [INF] Took 1.4898ms to start JetStream
+nats-nixon-1  | [1] 2026/11/13 05:52:44.590934 [INF] Listening for client connections on 0.0.0.0:4222
+nats-nixon-1  | [1] 2026/11/13 05:52:44.591105 [INF] Server is ready

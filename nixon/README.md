@@ -4,7 +4,7 @@
 - **Universidad:** Universidad Técnica Estatal de Quevedo.
 - **Facultad:** Facultad de Ciencias de la Computación.
 - **Carrera:** Software.
-- **Curso y paralelo:**  7mo Nivel, Paralelo A
+- **Curso y paralelo:** 7mo nivel, paralelo A.
 - **Asignatura:** Sistemas Distribuidos.
 - **Actividad:** TA-IND-01 — Informe académico individual.
 - **Repositorio:** [NixonPiguave/app-dist-TA-IND-01-](https://github.com/NixonPiguave/app-dist-TA-IND-01-).
@@ -18,16 +18,21 @@ Analizar las transparencias de distribución, CAP/PACELC, los modelos de comunic
 
 ## Estado del trabajo
 
-Etapa inicial: selección del tema, planificación y creación de los archivos de presentación y bitácora. La investigación bibliográfica y la experimentación están pendientes.
+Se completó la primera ejecución local de NATS 2.15.3 con JetStream mediante Docker Compose. Se conservaron la configuración, los comandos, una captura original y la salida del inicio del servidor.
+
+Las siguientes etapas incluyen configurar tres nodos y un flujo con tres réplicas, probar la mensajería y observar la caída y recuperación de un nodo. La investigación bibliográfica y el informe están pendientes.
 
 ## Contenido actual
 
-- [BITACORA.md](BITACORA.md): registro de las actividades realizadas, los problemas encontrados, las soluciones y el tiempo dedicado.
-- README.md: presentación del trabajo.
+- [BITACORA.md](BITACORA.md): registro del trabajo realizado.
+- [experimento/comandos.md](experimento/comandos.md): procedimiento, explicación de los comandos e interpretación de la primera ejecución.
+- [experimento/compose.yaml](experimento/compose.yaml): configuración ejecutable de NATS con JetStream.
+- [experimento/resultado-inicio.txt](experimento/resultado-inicio.txt): estado del contenedor y registros de inicio.
+- [Primera captura de ejecución](evidencias/ejecucion/01-inicio-nats-jetstream.png): evidencia original del servidor en funcionamiento.
 
-## Experimento previsto
+## Reproducción de la ejecución
 
-Configurar un clúster local de tres nodos NATS con JetStream y un flujo con tres réplicas. Publicar y consumir mensajes, detener el líder del flujo y observar la recuperación del servicio y la posterior reincorporación del nodo.
+Se requiere Docker Desktop con contenedores Linux y Docker Compose. Consultar el [procedimiento del experimento](experimento/comandos.md) para iniciar el servidor, comprobar su estado y guardar los resultados.
 
 ## Compilación del informe
 
