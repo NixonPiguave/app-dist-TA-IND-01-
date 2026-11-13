@@ -1,0 +1,86 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx,booktabs,tabularx,csquotes}
+\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
+\DefineBibliographyStrings{spanish}{artno={art.}}
+\addbibresource{referencias.bib}
+\usepackage[hidelinks]{hyperref}
+\input{datos.tex}
+\setlength{\parskip}{0.5em}
+\setlength{\emergencystretch}{2em}
+\newcommand{\pendiente}[1]{\par\noindent\textit{Pendiente: #1}\par}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\centering
+{\Large\Universidad\par}
+\Facultad\par
+\Carrera\par
+\vfill
+{\LARGE Análisis crítico de la replicación y tolerancia a fallos en MongoDB\par}
+\bigskip
+{\large Comparación con Apache CouchDB\par}
+\bigskip
+Sistemas Distribuidos --- TA-IND-01\par
+\bigskip
+\textbf{Plantilla inicial de trabajo}\par
+\vfill
+\Estudiante\par
+\Paralelo\par
+\FechaDocumento\par
+\bigskip
+Repositorio: \expandafter\url\expandafter{\Repositorio}\par
+Carpeta individual: \texttt{\CarpetaEntrega}\par
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+\section*{Resumen}
+\pendiente{150--200 palabras, redactadas al concluir el análisis y la prueba.}
+
+\section{Introducción}
+\pendiente{Problema, usuarios, escala documentada y motivo de elección.}
+
+\section{Arquitectura del sistema}
+\pendiente{Componentes, comunicación y diagrama propio evolucionado desde el bosquejo a mano.}
+
+\section{Análisis con los conceptos de la Unidad 1}
+\subsection{Transparencias de distribución}
+\pendiente{Acceso, ubicación, migración, reubicación, replicación, concurrencia y fallos; alcance y límites.}
+\subsection{CAP y PACELC}
+\pendiente{Prioridades ante particiones y sin ellas, precisando configuración y evidencia.}
+\subsection{Modelos de comunicación}
+\pendiente{Roles, sincronía y asincronía, protocolos y mecanismos de comunicación.}
+\subsection{Tolerancia a fallos}
+\pendiente{Detección, elección, replicación, recuperación e incidente real documentado.}
+
+\section{Experimentación propia}
+\pendiente{Configuración, comandos, resultados reales, cuatro capturas originales e interpretación.}
+
+\section{Ejemplos del entorno del estudiante}
+\pendiente{Dos observaciones personales verdaderas relacionadas con conceptos de la unidad.}
+
+\section{Análisis comparativo}
+\pendiente{Tabla MongoDB--CouchDB con al menos cinco criterios de la unidad y discusión.}
+
+\section{Postura crítica}
+\pendiente{Fortalezas, limitaciones, compromisos y contextos donde no conviene la elección.}
+
+\section{Conclusiones}
+\pendiente{Afirmaciones derivadas del análisis y del experimento efectivamente realizado.}
+
+\section*{Declaración de uso de inteligencia artificial}
+Se utilizó OpenCode con GPT-6.1 Sol (\texttt{openai/gpt-6.1-sol}) para apoyar la selección de sistemas, la planificación y la preparación de esta estructura inicial. Esta plantilla no acredita lectura personal de fuentes ni ejecución del experimento.
+\pendiente{Actualizar los usos efectivos y describir cómo se verificó cada aporte.}
+
+\printbibliography[title={Referencias}]
+
+\appendix
+\section{Esquema inicial a mano}
+\pendiente{Fotografía original con nombre y fecha visibles.}
+\section{Evidencias de lectura}
+\pendiente{Tres capturas de artículos anotadas personalmente, con página y cita correspondiente.}
+\end{document}
