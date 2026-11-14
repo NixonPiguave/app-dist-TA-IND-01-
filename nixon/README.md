@@ -5,7 +5,7 @@
 - **Facultad:** Facultad de Ciencias de la Computación.
 - **Carrera:** Software.
 - **Curso y paralelo:** 7mo nivel, paralelo A.
-- **Asignatura:** Sistemas Distribuidos.
+- **Asignatura:** Aplicaciones Distribuidas.
 - **Actividad:** TA-IND-01 — Informe académico individual.
 - **Repositorio:** [NixonPiguave/app-dist-TA-IND-01-](https://github.com/NixonPiguave/app-dist-TA-IND-01-).
 - **Carpeta de esta entrega:** [nixon/](https://github.com/NixonPiguave/app-dist-TA-IND-01-/tree/main/nixon).
@@ -22,12 +22,16 @@ Se ejecutó NATS 2.15.3 con JetStream en un clúster local de tres nodos. Se com
 
 Se realizó además una prueba de caída abrupta del líder mediante SIGKILL: nats3 asumió el liderazgo, se recuperó el mensaje anterior y se publicó y recuperó un segundo mensaje con nats1 detenido. Al reiniciar nats1, los tres nodos volvieron a figurar sincronizados y el flujo conservó los dos mensajes.
 
-Se conservan el bosquejo inicial a mano, siete capturas de ejecución, las configuraciones y las salidas de las comprobaciones. La bibliografía inicial reúne tres artículos de revista en inglés sobre NATS JetStream y Apache Pulsar, acompañados de cuatro capturas de lectura con fragmentos resaltados. Quedan pendientes ampliar las fuentes, desarrollar el análisis comparativo e integrar las citas y los anexos en el informe LaTeX.
+Se conserva el bosquejo inicial a mano, siete capturas de ejecución, las configuraciones y las salidas. El informe LaTeX integra el análisis de la Unidad 1, la arquitectura digital, los dos ejemplos personales, una tabla comparativa de ocho criterios y los anexos A y B. La bibliografía contiene 14 fuentes citadas: tres artículos de revista con DOI, cuatro publicaciones técnicas de 2025-2026 y siete páginas de documentación oficial consultadas el 14 de noviembre de 2026. El video de sustentación está pendiente.
 
 ## Procedimiento y configuraciones
 
 - [BITACORA.md](BITACORA.md): registro del trabajo realizado.
-- [informe/referencias.bib](informe/referencias.bib): bibliografía inicial exportada del proyecto LaTeX, con tres artículos de revista.
+- [informe/informe.pdf](informe/informe.pdf): informe compilado con el análisis comparativo y los anexos.
+- [informe/informe.tex](informe/informe.tex): archivo principal LaTeX.
+- [informe/referencias.bib](informe/referencias.bib): bibliografía IEEE; conserva los tres artículos iniciales y añade las fuentes técnicas citadas.
+- [informe/figuras/arquitectura.drawio](informe/figuras/arquitectura.drawio): diagrama editable derivado del bosquejo y del despliegue.
+- Arquitectura exportada en [PDF](informe/figuras/arquitectura.pdf) y [PNG](informe/figuras/arquitectura.png).
 - [experimento/comandos.md](experimento/comandos.md): procedimiento, comandos y forma de guardar las salidas.
 - [experimento/compose.yaml](experimento/compose.yaml): configuración histórica de la primera ejecución con un servidor.
 - [experimento/compose-cluster.yaml](experimento/compose-cluster.yaml): configuración de los tres nodos; se selecciona con `docker compose -f compose-cluster.yaml` desde experimento/.
@@ -69,11 +73,19 @@ Se requiere Docker Desktop con contenedores Linux y Docker Compose. El [procedim
 
 ## Compilación del informe
 
-Pendiente. Al incorporar el informe en LaTeX, se añadirán el compilador, el archivo principal, las dependencias y los comandos de compilación comprobados.
+El archivo principal es `informe/informe.tex`. La compilación se comprobó con pdfLaTeX (TeX Live 2026) y Biber 2.22, mediante la secuencia siguiente, ejecutada desde `nixon/informe/`:
+
+```powershell
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+biber informe
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+```
+
+El resultado es `informe.pdf`. Se necesita una distribución LaTeX actual con Biber y los paquetes `fontenc`, `inputenc`, `babel` (español y sus patrones de separación silábica), `lmodern`, `microtype`, `geometry`, `graphicx`, `xcolor`, `booktabs`, `tabularx`, `longtable`, `array`, `float`, `caption`, `csquotes`, `biblatex`, `biblatex-ieee`, `hyperref` y `titlesec`.
+
+La estructura de carpetas debe conservarse: el documento utiliza rutas relativas a `../evidencias/` y a `figuras/`. No requiere instalar Docker para compilar; Docker se utiliza para reproducir el experimento. Para modificar la arquitectura, abrir el archivo `.drawio` con diagrams.net y volver a exportarlo como `arquitectura.pdf` antes de recompilar.
 
 ## Video de sustentación
 
 Pendiente de grabación y publicación.
-
-
-

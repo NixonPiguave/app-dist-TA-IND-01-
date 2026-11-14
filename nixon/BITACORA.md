@@ -74,3 +74,31 @@
 ### Uso de IA
 
 - Usé Codex para planificar las actividades, buscar el sistema que analizaría, preparar la configuración de Docker Compose, redactar y revisar la documentación (comandos.md y README) y resolver la duplicación de los registros. Para la busqueda de fuentes de informacion relacionadas a los sistemas usados y analizados. Ejecuté personalmente los comandos y conservé sus salidas y capturas originales. La explicación del procedimiento se contrastó con esos registros.
+
+## 2026-11-14
+
+### Qué hice
+
+- Revisé los requisitos del informe y aporté dos experiencias personales: mensajes y stickers pendientes en WhatsApp y una entrega que no aparecía actualizada en el SGA.
+- Preparé con apoyo de Codex el diagrama digital y el borrador completo del informe en LaTeX, relacionando las fuentes con las salidas del experimento.
+- Amplié la bibliografía con fuentes técnicas sobre replicación, fallos y Apache Pulsar. Se contrastaron los tres DOI con sus artículos.
+- Integré las capturas, el bosquejo y las referencias en el PDF; se comprobó la compilación y actualicé las instrucciones del README.
+- Preparé por separado el PDF de una página con mis datos y la URL del repositorio para el SGA.
+
+### Problema encontrado
+
+- Necesitaba relacionar mis experiencias con los conceptos de la unidad sin afirmar causas técnicas que no podía comprobar.
+- Faltaba integrar las evidencias y el análisis en un informe que pudiera compilarse con sus referencias y figuras.
+
+### Cómo lo resolví
+
+- Expliqué lo que observé como usuario y lo relacioné con los reintentos y la confirmación del estado de las operaciones, sin dar por comprobada la causa del problema.
+- Organicé el informe con los archivos y las salidas existentes, se contrastaron las fuentes, se compiló el PDF y se revisaron sus figuras, tablas y citas.
+
+### Tiempo dedicado
+
+1 Hora y 30 minutos:
+-1 Hora y 30 minutos de preparación del informe y sus archivos.
+
+### Uso de IA
+-La utilicé para la estructura del informe, generar el borrador del diagrama y revisar la redacción. Los DOI y los PDF los verifique personalmente
