@@ -1,0 +1,12 @@
+ Container taind01-roger-mongo-m1-1 Starting 
+ Container taind01-roger-mongo-m1-1 Started 
+roger
+omarchy
+2026-11-13T22:47:13-05:00
+Nodo consultado directamente: m1:27017
+m1:27017 | SECONDARY | salud=1
+m2:27017 | PRIMARY | salud=1
+m3:27017 | SECONDARY | salud=1
+Documentos encontrados en el nodo reincorporado:
+roger-taind01-base | Documento previo al apagado del primario
+roger-taind01-despues | Escritura con un miembro detenido

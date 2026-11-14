@@ -18,7 +18,7 @@ El repositorio es compartido, pero esta carpeta reúne únicamente mi entrega in
 
 **Sistema principal:** MongoDB Community. **Comparador:** Apache CouchDB.
 
-MongoDB está iniciado con un primario y dos secundarios. Se conservan el registro de configuración y la primera captura. La prueba de cambio de primario y el desarrollo del informe siguen pendientes.
+Se completó la prueba de apagado y reincorporación del primario, con cuatro capturas y registros de ejecución. El informe sigue en desarrollo.
 
 ## Estructura inicial
 
@@ -29,6 +29,7 @@ RogerGarcia/
 ├── experimento/
 │   ├── compose.yaml
 │   ├── GUIA.md
+│   ├── RESULTADOS.md
 │   ├── resultados/
 │   └── capturas/
 ├── informe/
@@ -43,7 +44,7 @@ Las demás evidencias y el PDF final del informe se añadirán durante el desarr
 
 ## Experimento
 
-La [guía del laboratorio](experimento/GUIA.md) contiene los comandos para ejecutar tres réplicas de MongoDB con Docker Compose. Se necesita acceso a Docker; en este equipo se utiliza `sudo` para sus comandos. Las salidas y capturas se guardarán dentro de `experimento/`.
+La [guía del laboratorio](experimento/GUIA.md) contiene los comandos y los [resultados](experimento/RESULTADOS.md) describen lo observado y sus límites. Se necesita acceso a Docker; en este equipo se utiliza `sudo` para sus comandos. Las salidas y capturas están dentro de `experimento/`.
 
 ## Compilación del informe
 

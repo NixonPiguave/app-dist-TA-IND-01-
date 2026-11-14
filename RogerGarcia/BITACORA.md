@@ -12,6 +12,9 @@
 - **Actividad:** comprobación del servicio Docker, preparación de la configuración y puesta en marcha de tres nodos MongoDB.
 - **Problema y solución:** el acceso normal estaba denegado; `sudo docker version` mostró el servidor disponible. Se utilizará autorización puntual, sin cambiar permisos del sistema.
 - **Estado:** conjunto `rs0` configurado. La consulta del 13 de noviembre a las 21:09 mostró m1 como `PRIMARY` y m2/m3 como `SECONDARY`, todos con salud `1`. Salida conservada en `experimento/resultados/02-replicas.txt` y captura en `experimento/capturas/01-estado-inicial.png`.
+- **Datos propios:** a las 22:33 se insertó y consultó `roger-taind01-base`, con confirmación de los tres miembros (`w:3`, `j:true`). Registro: `experimento/resultados/03-datos.txt`.
+- **Prueba de apagado:** a las 22:41 se apagó ordenadamente m1; m2 fue observado como primario y confirmó una nueva inserción con `w:"majority"`. El documento inicial siguió consultable. Registro: `experimento/resultados/04-apagado.txt`.
+- **Recuperación:** a las 22:47 m1 regresó como secundario y se consultaron directamente en él ambos documentos. Se conservaron cuatro capturas y se resumieron las observaciones y límites de la prueba.
 
 Los commits y las actualizaciones en GitHub los realizará personalmente el estudiante desde la página del repositorio, conservando la ruta `RogerGarcia/` y los nombres de archivo para mantener la trazabilidad.
 

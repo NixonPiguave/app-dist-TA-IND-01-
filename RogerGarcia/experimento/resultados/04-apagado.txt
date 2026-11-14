@@ -1,0 +1,16 @@
+roger
+omarchy
+2026-11-13T22:41:33-05:00
+74818b57e3829b8acce1db3703ddf1883d2f54de1ceef7f8d87a956b676e0463
+Primario apagado: m1
+Estado: exited; salida: 0; OOM: false
+Primario actual: m2:27017
+m1:27017 | SECONDARY | salud=1
+m2:27017 | PRIMARY | salud=1
+m3:27017 | SECONDARY | salud=1
+Documento inicial conservado: roger-taind01-base
+Escritura posterior confirmada con w=majority y j=true:
+{
+  ok: 1,
+  n: 1
+}

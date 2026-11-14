@@ -1,0 +1,17 @@
+roger
+omarchy
+2026-11-13T22:33:24-05:00
+Inserción confirmada con w=3 y j=true.
+{
+  ok: 1,
+  n: 1
+}
+Documento consultado:
+{
+  _id: 'roger-taind01-base',
+  estudiante: 'Roger Steven García Sangoquiza',
+  paralelo: '7mo Soft, paralelo B',
+  actividad: 'TA-IND-01',
+  mensaje: 'Documento previo al apagado del primario',
+  fecha: ISODate('2026-11-14T03:33:24.594Z')
+}
