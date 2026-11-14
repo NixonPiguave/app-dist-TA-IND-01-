@@ -48,16 +48,22 @@ Sistema analizado: Redis (comparado con Memcached)
 - Dejé `referencias.bib` con 8 fuentes y la especificación de Redis Cluster.
 - Leí las fuentes de Memcached (Yang y Mishra) y capturé los pasajes con su página para el Anexo B.
 - Escribí `informe.tex` y lo ajusté a la estructura de la guía: resumen, transparencias, modelos de comunicación, comparación con Memcached y postura crítica.
-- Hice el diagrama de arquitectura en `figuras/arquitectura.drawio` y lo exporté a PDF.
+- Agregué el diagrama de arquitectura (`figuras/arquitectura.drawio` y su PDF) a partir de mi boceto a mano, y escribí en la sección 2 qué cambió respecto al boceto.
+- Volví a leer la p. 9 y la tabla 6 de Repin y Sidorov contra mi captura y reescribí lo que cito: ellos dicen que Redis Cluster parece propenso a perder datos al fallar un nodo, y mi prueba no perdió ninguna escritura confirmada. Corregí "seis" por "siete" transparencias y el intervalo de consulta de la promoción (cada 200 ms).
+- Ajusté la conclusión sobre pérdida de escrituras y agregué una sobre tiempos de espera del cliente (38 s bloqueado). Compilé el PDF y revisé que no quedaran referencias sin resolver.
 - Completé el `README.md` con las dependencias y el orden de compilación.
 
 **Problemas encontrados**
 - No tenía una fuente académica para Memcached.
+- Algunas celdas de la tabla comparativa no tenían respaldo en una fuente.
+- El borrador del informe tenía frases que sonaban a texto automático.
 
 **Cómo los resolví**
 - Encontré a Mishra (2021) y Yang (2023) y comprobé en los PDF lo que cito de cada uno.
+- Reescribí el informe con frases más cortas y directas, y quité los conectores repetidos.
+- Comparé cada frase sobre Repin y Sidorov con mi captura de la p. 9 y quité lo que no estaba en el texto.
 
 **Uso de IA**
-- Usé Claude para buscar y comprobar fuentes, redactar el borrador del informe y generar el borrador del diagrama. Abrí los DOI y los PDF yo mismo, y las observaciones de mi entorno son mías.
+- Usé Claude para buscar y comprobar fuentes, redactar el borrador del informe y generar el borrador del diagrama y revisar la redacción. Abrí los DOI y los PDF yo mismo, y las observaciones de mi entorno son mías.
 
-**Tiempo dedicado:** __ horas
+**Tiempo dedicado:** 4 horas
