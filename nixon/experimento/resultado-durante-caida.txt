@@ -1,0 +1,13 @@
+﻿2026-11-13 20:53:27 -05:00
+Item: MENSAJES_NIXON#1 received 2026-11-14 00:59:46.422140316 +0000 UTC (53m48s) on Subject nixon.mensajes
+
+Mensaje de prueba de Nixon Piguave - TA-IND-01
+
+
+01:53:42 Published 35 bytes to "nixon.mensajes"
+01:53:42 Stored in Stream: MENSAJES_NIXON Sequence: 2
+Item: MENSAJES_NIXON#2 received 2026-11-14 01:53:42.505253062 +0000 UTC (33.30s) on Subject nixon.mensajes
+
+Mensaje_de_Nixon_con_nats1_detenido
+
+

@@ -31,6 +31,12 @@
 - Recuperé el mensaje de secuencia 1 conectando el cliente a nats3 y comprobé que el comando terminó con código 0.
 - Guardé la salida de mensajería y su captura, y actualicé el procedimiento y el README con estas etapas.
 
+- Guardé el estado del flujo antes del fallo y confirmé qué nodo era el líder.
+- Terminé abruptamente el nodo líder y comprobé que nats3 asumía esa función mientras nats1 permanecía detenido.
+- Recuperé el mensaje anterior y publiqué y recuperé uno nuevo con el nodo 1 detenido.
+- Volví a iniciar nats1 y comprobé que se reincorporaba sincronizado, con los dos mensajes conservados.
+- Guardé las salidas y las capturas de la caída y la recuperación, y actualicé la documentación del experimento.
+
 ### Problema encontrado
 
 - Vi tarde el mensaje sobre la actividad y tuve que buscar, con ayuda de Codex, un sistema que no hubieran elegido mis compañeros de curso.
@@ -38,19 +44,24 @@
 
 - PowerShell mostró NativeCommandError al redirigir un mensaje informativo de la herramienta NATS. La salida también confirmaba que el mensaje se había almacenado correctamente.
 
+- Durante la prueba provocada, el nodo que dirigía el flujo dejó de estar disponible y su copia quedó desactualizada mientras los otros nodos seguían funcionando.
+
 ### Cómo lo resolví
 
 - Elegí NATS con JetStream como sistema principal y Apache Pulsar como sistema de comparación. Anuncié mi elección en el chat a las 19:49 del día anterior.
 - Volví a guardar el archivo de resultados y comprobé que mostrara los datos completos, sin repetir los registros.
 - Conservé la salida de la publicación y no repetí el envío. Para recuperar el mensaje, combiné las salidas dentro del contenedor con sh -c antes de guardarlas en PowerShell. La recuperación devolvió el texto publicado y código de salida 0.
 
+- Comprobé que otro nodo asumiera el liderazgo y que pudiera recuperar y enviar mensajes. Después volví a iniciar el nodo detenido y verifiqué que se sincronizara y que los mensajes siguieran disponibles.
+
 ### Tiempo dedicado
 
-3 horas:
+4 Horas:
 -30 minutos de organización inicial  
 -1 hora de configuración y primera ejecución.
 -1 hora y 30 minutos de elaboración del bosquejo, configuración del clúster y prueba de mensajería.
+-1 hora de prueba de caída del nodo líder, comprobación de los mensajes y recuperación del nodo.
 
 ### Uso de IA
 
-- Usé Codex para planificar las actividades, buscar el sistema que analizaría, preparar la configuración de Docker Compose, redactar y revisar la documentación (comando.md y README) y resolver la duplicación de los registros. Ejecuté personalmente los comandos y conservé sus salidas y capturas originales. La explicación del procedimiento se contrastó con esos registros.
+- Usé Codex para planificar las actividades, buscar el sistema que analizaría, preparar la configuración de Docker Compose, redactar y revisar la documentación (comandos.md y README) y resolver la duplicación de los registros. Ejecuté personalmente los comandos y conservé sus salidas y capturas originales. La explicación del procedimiento se contrastó con esos registros.
