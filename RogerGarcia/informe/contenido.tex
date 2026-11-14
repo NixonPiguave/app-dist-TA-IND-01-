@@ -1,0 +1,164 @@
+\section*{Resumen}
+Se analiza MongoDB Community como sistema distribuido de almacenamiento documental y se contrasta con Apache CouchDB. El estudio relaciona arquitectura, transparencias de distribución, CAP, PACELC, comunicación y tolerancia a fallos con documentación técnica y artículos recientes. Se implementó un conjunto local de tres réplicas de MongoDB 8.0.16 mediante Docker. El experimento insertó un documento con confirmación de los tres miembros, apagó ordenadamente el primario y comprobó una nueva escritura con mayoría. Después se reincorporó el nodo detenido y se consultaron directamente en él ambos documentos. Se observó que m2 sustituyó a m1 como primario y que m1 regresó como secundario. La comparación muestra que el liderazgo de escritura de MongoDB y la sincronización entre bases independientes de CouchDB plantean compromisos distintos de coordinación y resolución de conflictos. La conclusión principal es que la replicación permitió continuar las operaciones comprobadas, pero no ocultó todas las decisiones de consistencia ni elimina fallos compartidos. El montaje no prueba particiones de red, recuperación ante pérdida del equipo ni un tiempo máximo de elección.
+
+\section{Introducción}
+Una aplicación que guarda información en un único proceso depende de que ese proceso y su equipo continúen disponibles. Replicar datos busca reducir esa dependencia, pero introduce nuevas preguntas: qué copia recibe una escritura, cuándo se confirma y qué ocurre si los miembros dejan de comunicarse. MongoDB permite estudiar estas preguntas con un sistema real que ofrece un conjunto de réplicas o \textit{replica set}: varios procesos mantienen el mismo conjunto de datos y uno desempeña el papel de primario de escritura \cite{MongoReplication}.
+
+El caso principal de este informe es MongoDB Community autogestionado, no todas las funciones de MongoDB Atlas ni una instalación fragmentada. La rama 8.0 cuenta con un anuncio de disponibilidad general publicado en 2024; las cifras comerciales de rendimiento de ese anuncio no se usan como mediciones propias \cite{scharf2024mongodb80}. La escala experimental es de tres procesos \texttt{mongod} en una computadora. Como referencia de uso real se considera el Hub de Hugging Face, cuyo incidente de abril de 2024 documenta una aplicación de modelos y datasets que dependía de MongoDB Atlas y sufrió problemas de sobrecarga \cite{Georges2024}. Ese caso acredita un uso en producción, pero no permite atribuirle cifras de usuarios no verificadas ni equiparar su infraestructura con este laboratorio.
+
+CouchDB es un comparador pertinente porque también trabaja con documentos, pero organiza de otra manera la coordinación y la replicación. Su anuncio de la versión 3.5.3, de octubre de 2026, permite situarlo como proyecto actual y destaca la replicación entre entornos; no constituye una prueba de sus garantías de consistencia \cite{lehnardt2026couchdb353}. La revisión de Khan et al. incluye MongoDB y CouchDB dentro de las bases documentales \cite[p.~10]{KhanEtAl2023}. Se utiliza esa clasificación como contexto, no como demostración de sus garantías actuales. Para estas últimas se priorizan los manuales técnicos. La elección permite contrastar decisiones de distribución sin recurrir a servicios de pago ni implementar una base de datos desde cero.
+
+La pregunta del trabajo es: \textit{¿hasta dónde permite MongoDB continuar operando cuando se apaga su primario, y qué compromisos de su diseño se hacen visibles frente a CouchDB?} Se combina investigación documental con una prueba reproducible; no se plantea un benchmark de rendimiento entre ambos productos.
+
+\section{Arquitectura del sistema}
+El conjunto \texttt{rs0} contiene \texttt{m1}, \texttt{m2} y \texttt{m3}, todos con datos y voto. Al inicio m1 era primario y los otros dos eran secundarios. Los secundarios copian y aplican asíncronamente el registro de operaciones del primario, denominado \texttt{oplog}. Para el cliente, la URI incluye los tres miembros y el nombre del conjunto; no es equivalente a una conexión directa que desconozca la topología \cite{MongoReplication}.
+
+Se separan dos mayorías: la electoral y la utilizada para confirmar datos. En este montaje coinciden numéricamente porque los tres votantes almacenan datos: dos votos bastan para una mayoría electoral y dos miembros con datos satisfacen \texttt{w:"majority"}. No se usan árbitros, que votarían sin almacenar una copia. Tampoco hay \textit{sharding}: los tres nodos no representan tres fragmentos distintos del conjunto de documentos \cite{MongoElections,MongoWriteConcern}.
+
+\begin{figure}[H]
+\centering
+\input{figuras/arquitectura.tex}
+\caption{Topología inicial del laboratorio, redibujada en TikZ a partir del bosquejo del Anexo A.}
+\label{fig:arquitectura}
+\end{figure}
+
+La evolución desde el bosquejo consiste en identificar nombres y roles, separar el tráfico de replicación de los mensajes de control y aclarar que los nodos son contenedores del mismo host. El dibujo en papel representa servidores, pero esa representación no debe confundirse con tres equipos físicos independientes. Las flechas continuas muestran el flujo lógico de cambios; las discontinuas, el control entre miembros. Tras una elección cambia el papel de los nodos, no la identidad de la base.
+
+En CouchDB deben distinguirse dos planos. Dentro de un clúster hay fragmentos o \textit{shards}, copias y nodos que coordinan solicitudes. Cualquier nodo puede coordinar una petición; no existe un primario global equivalente al del replica set. Por otro lado, la replicación HTTP entre bases independientes copia cambios desde una fuente hacia un destino. Para sincronizar en ambos sentidos se necesitan los dos flujos; eso no convierte una base en secundaria de la otra \cite{CouchShards,CouchReplication}.
+
+\section{Análisis con los conceptos de la Unidad 1}
+\subsection{Transparencias de distribución}
+Se considera una transparencia parcial cuando el sistema oculta parte de la distribución, pero quedan decisiones o efectos visibles para el cliente. Esta clasificación es un juicio sobre el caso estudiado, no un catálogo de garantías absolutas del fabricante. Se apoya en los roles, elecciones y opciones de lectura/escritura documentados \cite{MongoReplication,MongoElections,MongoWriteConcern}.
+
+\begin{longtable}{p{.19\linewidth}p{.73\linewidth}}
+\toprule
+\textbf{Transparencia} & \textbf{Evaluación en MongoDB} \\
+\midrule
+\endhead
+Acceso & Parcial. Las operaciones se expresan mediante una interfaz de base de datos y el cliente no implementa el oplog. No desaparecen los requisitos del protocolo, la conexión ni las opciones de consistencia. \\
+Ubicación & Parcial. Con una URI de conjunto, el cliente puede descubrir roles sin que la aplicación codifique un primario fijo. Los nombres de los miembros y las políticas de selección siguen siendo necesarios. \\
+Migración & No demostrada por este ensayo. Que otro nodo asuma el rol de primario no significa que se trasladó un proceso o una base en ejecución. No se probaron movimientos de fragmentos. \\
+Reubicación & Limitada. El cambio de primario permite redirigir operaciones, pero puede haber una transición sin escrituras y errores de selección. No se verificó continuidad de cada solicitud durante esa transición. \\
+Replicación & Parcial. La aplicación no copia manualmente cada documento, pero debe decidir qué confirmaciones esperar. En el ensayo se cambió de \texttt{w:3} a \texttt{majority} al quedar dos miembros disponibles. \\
+Concurrencia & Parcial. WiredTiger utiliza control optimista para muchas operaciones y MongoDB ofrece atomicidad por documento. Esto no hace atómica cualquier secuencia de negocio ni sustituye una transacción multidocumento cuando se requiere \cite{MongoConcurrency}. \\
+Fallos & Parcial. Se observó otro primario y una escritura posterior exitosa. El cliente y la configuración siguen influyendo; no se deduce que todos los fallos o interrupciones sean invisibles. \\
+\bottomrule
+\end{longtable}
+
+La transparencia de replicación merece especial cuidado: ocultar la copia física de documentos no equivale a ocultar el compromiso de consistencia. Solicitar las tres confirmaciones impidió depender de una sola copia antes del ensayo, pero esa misma condición no podría cumplirse con un miembro detenido. La elección de mayoría permitió la operación comprobada con dos miembros.
+
+\subsection{CAP y PACELC}\label{sec:cap}
+CAP trata la tensión entre consistencia y disponibilidad cuando una partición impide comunicar componentes del sistema. No se interpreta como escoger libremente dos letras en cualquier circunstancia. En una partición 2+1 del conjunto propuesto, un lado con un solo voto no puede completar una elección por mayoría. Si se exigen escrituras confirmadas por mayoría y lecturas linealizables, no todas las solicitudes dirigidas a cualquier componente pueden completarse con esas garantías \cite{MongoElections,MongoLinearizable}.
+
+Por ello, MongoDB puede analizarse como orientado a preservar esas garantías a costa de disponibilidad en el componente minoritario \textit{para esa configuración}. La precisión es importante: \texttt{readPreference} decide dónde leer, \texttt{readConcern} define garantías de lectura y \texttt{writeConcern} indica qué confirmaciones exige una escritura. No basta afirmar que el producto es siempre ``CP''. Tampoco una lectura \texttt{majority} es automáticamente linealizable. El manual delimita \texttt{linearizable} al primario y a operaciones que identifican de forma única un documento, combinado con las confirmaciones de escritura correspondientes \cite{MongoLinearizable}.
+
+En MongoDB 8.0, confirmar \texttt{w:"majority"} implica que la mayoría de miembros con datos escribió durablemente la entrada del oplog. Aplicar el cambio en la colección del secundario sigue siendo asíncrono. Por tanto, una confirmación y la visibilidad inmediata en cualquier secundario son cuestiones distintas. Además, un \texttt{wtimeout} no deshace automáticamente una escritura ya realizada; un resultado incierto requiere comprobación \cite{MongoWriteConcern}.
+
+PACELC añade la situación sin partición: además del compromiso ante particiones, se analiza la relación entre latencia y consistencia en operación normal. En MongoDB, esperar más confirmaciones o comprobar garantías más exigentes introduce dependencias adicionales frente a una confirmación local. No se midió aquí cuánto cambia la latencia. Ferreira et al. estudian configuraciones de consistencia y despliegues regionales de varias bases, incluida MongoDB; sus resultados muestran por qué hay que declarar configuración y ubicación antes de comparar rendimiento \cite{FerreiraEtAl2024}. No se trasladan sus porcentajes a este equipo ni se usa su descripción general como sustituto del manual.
+
+El contraste con CouchDB requiere identificar el mecanismo. Dos bases independientes pueden aceptar cambios locales mientras la replicación HTTP está interrumpida y sincronizarlos después, con posible conflicto. En ese caso se favorece continuidad local frente a una única versión global inmediata. Dentro de un clúster, en cambio, importan las copias alcanzables por shard, los quórums y el endpoint. Con tres réplicas, los valores predeterminados de lectura y escritura de documentos son dos, pero \texttt{\_find}, \texttt{\_view} y \texttt{\_search} leen una copia; no heredan una garantía universal de quórum \cite{CouchShards,CouchReplication,CouchConflicts}.
+
+Sin desconexión, la replicación HTTP entre bases sigue siendo un flujo separado: confirmar en A no confirma automáticamente la copia en B. Ese diseño permite respuesta local sin esperar a la base remota, a cambio de posibles retrasos y reconciliación. Es un análisis PACELC del camino de operación, no una etiqueta única para todas las funciones de CouchDB.
+
+\subsection{Modelos de comunicación}
+Para el acceso de clientes, MongoDB utiliza un protocolo propio sobre sockets TCP/IP; el laboratorio lo utiliza mediante \texttt{mongosh}. No se trata de una API REST HTTP \cite{MongoWire}. La aplicación envía solicitudes a servidores, mientras que los miembros se comunican para replicación, supervisión y elecciones. Por ello se describe como acceso cliente-servidor con coordinación entre miembros, no como una aplicación puramente entre pares sin roles.
+
+La propagación del oplog es asíncrona. Esperar respuestas de tres miembros no cambia mágicamente ese mecanismo a ``replicación totalmente síncrona'': establece una condición para responder al cliente. Se distinguen el envío de cambios, su persistencia, su aplicación y la confirmación \cite{MongoReplication,MongoWriteConcern}.
+
+CouchDB expone HTTP/JSON y su protocolo de replicación entre bases usa la API HTTP pública, con cambios incrementales y puntos de progreso. El clúster interno usa mecanismos de distribución de Erlang; no debe confundirse ese tráfico con una llamada a \texttt{/\_replicate}. Ambos sistemas utilizan transporte de red, pero difieren en el protocolo de acceso y en quién coordina las operaciones \cite{CouchReplication,CouchSetup}.
+
+\subsection{Tolerancia a fallos e incidente documentado}
+Los miembros de MongoDB intercambian heartbeats; la documentación indica un intervalo de dos segundos y parámetros de timeout para sospechar inaccesibilidad y desencadenar elecciones. Esos valores no constituyen una promesa de recuperación total en dos o diez segundos. La mayoría y la elegibilidad de los miembros condicionan la elección; durante la transición no se procesan escrituras mediante un primario ausente \cite{MongoElections}.
+
+La tolerancia observada se limita a la ausencia de un miembro con los otros dos disponibles. No se probaron fallos bizantinos, corrupción, pérdida de almacenamiento ni fallo del equipo. Los reintentos del cliente tampoco deben confundirse con la replicación. En este ensayo se configuró \texttt{retryWrites=false} para no introducir reintentos automáticos de escritura que ocultaran el resultado de la operación enviada.
+
+El incidente del Hub de Hugging Face, entre el 22 y el 24 de abril de 2024, ilustra un límite diferente. El postmortem describe consultas costosas, acumulación de trabajo y agotamiento de memoria del primario, seguido de elecciones. Las peticiones canceladas por clientes no cancelaban necesariamente el trabajo de base de datos. Cambiar de primario no eliminó esa sobrecarga común. Se aplicaron restricciones de tráfico, timeouts y optimizaciones; cambios de caché y cancelación se plantearon como soluciones de más largo plazo \cite{Georges2024}.
+
+Este relato no demuestra una caída global de Atlas ni pérdida de escrituras confirmadas. Su utilidad crítica es mostrar que replicar y elegir otro líder no sustituye controlar la carga de la aplicación. El laboratorio prueba un cambio de rol aislado; no reproduce la causa raíz de aquel incidente.
+
+\section{Experimentación propia}
+\subsection{Método y condiciones}
+Se ejecutaron tres contenedores MongoDB Community 8.0.16 en Linux, con la imagen fijada mediante etiqueta y digest. Cada contenedor tiene volumen propio, límite de 2 GiB y caché WiredTiger de 0,5 GiB. La red Docker es interna y no hay puertos publicados. La ausencia de autenticación solo se admite para datos de prueba en este entorno; no es una propuesta de despliegue de producción.
+
+Los comandos interactivos se ejecutaron desde Fish y Docker requirió autorización puntual mediante \texttt{sudo}. El conjunto se configuró con \texttt{rs.initiate()}; las observaciones se guardaron con \texttt{tee}. La guía, los scripts y las salidas originales están en \texttt{RogerGarcia/experimento/}. El registro completo de servidores se conserva comprimido sin alterar su contenido.
+
+La secuencia fue insertar con las tres confirmaciones, apagar el primario detectado mediante \texttt{SIGTERM} sin escalar a \texttt{SIGKILL}, consultar e insertar desde el conjunto superviviente y reincorporar el nodo. La comprobación final se conectó directamente a m1 con lectura permitida de secundario y \texttt{readConcern:"majority"}; por tanto, no se confundió una lectura en m2 con datos ya presentes en m1.
+
+\begin{lstlisting}
+fish apagado.fish 2>&1 | tee -a resultados/04-apagado.txt
+sudo docker compose start m1
+\end{lstlisting}
+
+Estos son los comandos centrales de intervención. Los scripts completos evitan fijar de antemano el primario y validan errores de escritura, incluido \texttt{writeConcernError}; un \texttt{ok:1} aislado no se considera suficiente si existen esos errores.
+
+\subsection{Observaciones e interpretación}
+La primera consulta mostró m1 como primario y m2/m3 como secundarios, con salud 1. Esta evidencia confirma roles y pertenencia al conjunto en ese momento; no demuestra por sí sola tolerancia a fallos.
+\captura{../experimento/capturas/01-estado-inicial.png}{Estado inicial de MongoDB 8.0.16, con usuario, equipo y fecha visibles.}{fig:inicio}
+
+A las 22:33, hora local del 13 de noviembre, se insertó \texttt{roger-taind01-base} con datos del estudiante y \texttt{w:3,j:true}. La respuesta comprobada fue \texttt{ok:1,n:1}, seguida de la lectura del documento. La fecha del documento aparece en UTC, mientras el encabezado conserva UTC-05:00; no son fechas contradictorias.
+\captura{../experimento/capturas/02-datos-propios.png}{Documento propio confirmado por los tres miembros y consultado antes del apagado.}{fig:datos}
+
+A las 22:41 se apagó m1. Docker informó \texttt{exited}, código de salida 0 y \texttt{OOM:false}. La siguiente operación identificó m2 como primario, encontró el documento base e insertó \texttt{roger-taind01-despues} con \texttt{w:"majority",j:true}. Los dos miembros restantes fueron suficientes para esa confirmación.
+\captura{../experimento/capturas/03-apagado-primario.png}{Apagado ordenado de m1, cambio de primario y escritura posterior con mayoría.}{fig:apagado}
+
+La misma salida todavía mostraba a m1 como secundario con salud 1 en \texttt{rs.status()}. Se conserva ese dato: la vista de supervisión no se interpreta como detección instantánea. Docker confirmó el estado del proceso, mientras el estado percibido por otro miembro podía estar en transición. Tampoco se concluye que no hubo pausa: no se enviaron solicitudes continuamente durante toda la elección.
+
+A las 22:47 se consultó directamente el m1 reincorporado. Apareció como secundario, m2 continuó como primario y se encontraron los documentos anterior y posterior al apagado. La observación respalda que m1 recibió el cambio producido durante su ausencia; no fue necesario forzarlo a recuperar el liderazgo.
+\captura{../experimento/capturas/04-recuperacion.png}{Consulta directa a m1 después de reincorporarlo, con ambos documentos presentes.}{fig:recuperacion}
+
+Las horas anteriores son marcas de ejecución de comandos. La diferencia entre ellas incluye intervención manual y no mide indisponibilidad ni tiempo de elección. Un apagado ordenado facilita que el primario abandone su rol; no equivale a un crash. Los resultados tampoco constituyen una prueba empírica de CAP, porque no se separaron componentes activos mediante una partición de red.
+
+\section{Ejemplos del entorno del estudiante}
+\subsection{YouTube: historial que tardó en actualizarse}
+En enero de 2026, sin recordar el día exacto, consulté mi historial de YouTube y no apareció inmediatamente el último video que había visto en el teléfono. Normalmente observaba una actualización rápida. El video apareció después de recargar la página varias veces.
+
+La observación se relaciona con la visibilidad temporal de cambios entre dispositivos: una interfaz puede mostrar un estado anterior al que el usuario espera. Es compatible con retraso de propagación o con una caché desactualizada, pero la experiencia no permite decidir cuál fue la causa ni demostrar el modelo de consistencia interno de YouTube. El vínculo con la unidad es distinguir ``la acción se realizó'' de ``todos los clientes ya ven el cambio''.
+
+\subsection{Discord: llamada activa e imagen retrasada}
+Meses antes de este informe, sin recordar una fecha exacta, estaba en una llamada privada de Discord con un amigo y envié una imagen por el chat. La llamada seguía funcionando y, según mi percepción, la conexión era buena. Sin embargo, la imagen no le apareció hasta aproximadamente un minuto después.
+
+Esto ilustra que disponibilidad y latencia pueden variar entre operaciones del mismo servicio. Una llamada activa no demuestra que el envío, almacenamiento y presentación de una imagen recorran el mismo camino ni que tengan idénticas condiciones de carga. Se relaciona con comunicación asincrónica y disponibilidad parcial. No se afirma que Discord estuviera totalmente caído ni que el retraso pruebe un fallo de consenso: no se dispone de registros internos.
+
+\section{Análisis comparativo}\label{sec:comparacion}
+La tabla distingue el conjunto de réplicas de MongoDB del clúster y de la replicación entre bases de CouchDB. Las diferencias proceden de sus mecanismos documentados, no de un experimento local de CouchDB \cite{MongoReplication,MongoWriteConcern,CouchShards,CouchReplication,CouchConflicts}.
+
+\begin{longtable}{p{.18\linewidth}p{.35\linewidth}p{.35\linewidth}}
+\toprule
+\textbf{Criterio} & \textbf{MongoDB estudiado} & \textbf{Apache CouchDB} \\
+\midrule
+\endhead
+Coordinación & Primario para escritura; secundarios copian el oplog. & Cualquier nodo coordina en el clúster; bases independientes aceptan cambios locales. \\
+Replicación & Propagación asíncrona y confirmaciones según \texttt{writeConcern}. & Copias por shard dentro del clúster; flujos HTTP separados entre bases. \\
+Partición y consistencia & La minoría no sostiene elecciones ni confirmaciones por mayoría; las lecturas requieren precisar su garantía. & Importan quórum y endpoint en el clúster. Entre bases independientes puede continuar la escritura local y aparecer divergencia. \\
+Latencia sin partición & Más confirmaciones implican más dependencias, sin una cifra universal de coste. & Una escritura local no espera por sí sola la copia en otra base independiente. \\
+Comunicación & Protocolo wire sobre TCP/IP para el cliente. & API HTTP/JSON; distribución Erlang interna y HTTP para replicación entre bases. \\
+Concurrencia & Atomicidad por documento y control optimista; otras garantías requieren operaciones apropiadas. & Revisiones y MVCC; actualizaciones obsoletas y conflictos pueden requerir intervención de aplicación. \\
+Fallos y recuperación & Mayoría electoral y nuevo primario; reincorporación mediante sincronización. & Copias y coordinadores sin primario global; entre bases se reanuda el flujo de cambios. \\
+Transparencia & Oculta la copia automática, pero expone roles, concerns y posibles errores durante elecciones. & Oculta parte de la distribución de shards, pero no elimina endpoints, revisiones ni conflictos. \\
+\bottomrule
+\end{longtable}
+
+Carvalho et al. comparan MongoDB, CouchDB y Couchbase mediante distintas cargas; su discusión cambia según se incluya la carga de escaneos \cite[pp.~14--16]{CarvalhoSaBernardino2023}. Esa evidencia impide concluir simplemente que una base ``es más rápida''. Su montaje tampoco demuestra el comportamiento de estas réplicas bajo particiones. En este informe, la comparación fuerte es de decisiones de diseño; no se combinan benchmarks ajenos con la prueba propia como si compartieran condiciones.
+
+El compromiso más claro es quién asume la reconciliación. MongoDB concentra las escrituras ordinarias del conjunto en un primario y espera las confirmaciones elegidas. CouchDB entre bases independientes permite cambios locales que después deben propagarse; una revisión ganadora determinista no fusiona automáticamente la intención de dos usuarios \cite{CouchConflicts}. Ningún enfoque elimina el coste: lo sitúa en una parte diferente del sistema.
+
+\section{Postura crítica}
+MongoDB resultó adecuado para aprender replicación sin implementar mecanismos de elección. El ensayo proporciona un argumento concreto a favor: se comprobó una escritura tras el cambio de primario y se encontraron luego ambos documentos en el miembro reincorporado. No se necesita convertir esa evidencia limitada en una garantía absoluta para reconocer su utilidad.
+
+La principal limitación del despliegue estudiado es el dominio de fallo compartido. Tres contenedores no protegen frente a la pérdida de la máquina que los ejecuta. También sería una mala elección de arquitectura si se interpretara ``tres réplicas'' como respaldo histórico: las copias del estado corriente no prueban recuperación de un borrado accidental. Ese problema requeriría una estrategia adicional que este trabajo no evalúa.
+
+Otra limitación aparece cuando una aplicación necesita escritura local independiente durante desconexiones prolongadas. El requisito de primario y mayoría limita ese servicio en una minoría aislada. Un diseño de bases independientes con replicación posterior, como el de CouchDB, puede ajustarse mejor si la aplicación acepta resolver divergencias. La recomendación depende del requisito de negocio, no de declarar superior un producto \cite{MongoElections,CouchReplication,CouchConflicts}.
+
+Tampoco sería defendible exigir lecturas siempre actuales, mínima latencia y continuidad universal sin definir configuración y fallos admisibles. Las opciones de MongoDB permiten compromisos, pero transfieren responsabilidad al desarrollador. El incidente de Hugging Face añade una advertencia: un nuevo primario no corrige por sí solo una demanda patológica que también afectará al sucesor \cite{Georges2024}.
+
+\section{Conclusiones}
+\begin{enumerate}
+\item El ensayo observó una escritura confirmada por mayoría después del apagado de m1 y la elección de m2. La continuidad comprobada depende de que quedaran dos miembros disponibles; no prueba ausencia de interrupción durante toda la transición.
+\item La consulta directa a m1 reincorporado encontró el documento previo y el escrito durante su ausencia. Se verificó recuperación de esos datos en ese miembro, sin forzar su regreso al liderazgo.
+\item Las transparencias fueron parciales: el cliente evitó copiar datos manualmente, pero la selección de confirmaciones y los roles siguieron siendo relevantes. Migración de procesos y reubicación sin interrupciones no quedaron demostradas.
+\item MongoDB y CouchDB plantean compromisos distintos de coordinación y reconciliación. Las garantías deben describirse por mecanismo, operación y configuración; las etiquetas generales CAP/PACELC no sustituyen esa descripción.
+\item El montaje no mide latencia, tiempo máximo de elección ni tolerancia a pérdida del host. La explicación crítica se fortalece al conservar esos límites y la vista transitoria observada, en lugar de presentar una recuperación perfecta.
+\end{enumerate}
+
+\section*{Declaración de uso de inteligencia artificial}
+Se utilizó OpenCode con GPT-6.1 Sol (\texttt{openai/gpt-6.1-sol}) para apoyar la planificación, búsqueda y cotejo inicial de fuentes, preparación de comandos, redacción del borrador, organización del diagrama TikZ y comprobación de compilación. La ejecución de las prácticas, las capturas, el bosquejo y las experiencias relatadas corresponden al estudiante. El cotejo inicial contrastó metadatos, pasajes y documentación técnica; la revisión personal final del texto, de cada DOI y de las evidencias sigue siendo necesaria antes de entregar.

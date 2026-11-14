@@ -35,6 +35,8 @@ RogerGarcia/
 ├── informe/
 │   ├── datos.tex
 │   ├── main.tex
+│   ├── contenido.tex
+│   ├── figuras/
 │   └── referencias.bib
 └── scripts/
     └── compilar.sh
@@ -50,7 +52,7 @@ La [guía del laboratorio](experimento/GUIA.md) contiene los comandos y los [res
 
 Compilador: **pdfLaTeX**. Bibliografía: **Biber + biblatex, estilo IEEE**. Archivo principal: `informe/main.tex`.
 
-Dependencias: TeX Live con `babel-spanish`, `geometry`, `graphicx`, `booktabs`, `tabularx`, `csquotes`, `biblatex`, `biblatex-ieee`, `biber` y `hyperref`; Bash para el script.
+Dependencias: TeX Live con `babel-spanish`, `geometry`, `graphicx`, `booktabs`, `tabularx`, `longtable`, `float`, `listings`, `tikz` (PGF), `csquotes`, `biblatex`, `biblatex-ieee`, `biber` y `hyperref`; Bash para el script.
 
 Desde la raíz del repositorio:
 
@@ -67,7 +69,7 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```
 
-Salida: `RogerGarcia/informe/main.pdf`. Esta versión es una plantilla y aún no satisface las cinco páginas de contenido. La bibliografía está vacía a propósito: no se han incorporado las fuentes que se revisarán para la entrega.
+Salida: `RogerGarcia/informe/main.pdf`. El borrador incluye análisis, resultados y bibliografía IEEE. Las imágenes de anexos que falten se muestran como pendientes y deben completarse antes de entregar.
 
 ## Organización de la entrega
 
@@ -81,4 +83,4 @@ Las actualizaciones se subirán manualmente desde GitHub, conservando rutas y no
 
 ## Uso de inteligencia artificial
 
-Se utilizó OpenCode con GPT-6.1 Sol (`openai/gpt-6.1-sol`) para selección de sistemas, planificación y preparación de plantillas, configuración y comandos. La declaración del informe se actualizará con los usos efectivos y las verificaciones realizadas. La ejecución y las capturas se documentan con sus registros correspondientes.
+Se utilizó OpenCode con GPT-6.1 Sol (`openai/gpt-6.1-sol`) para planificación, cotejo inicial de fuentes, comandos, borrador de redacción, diagrama y compilación. La ejecución y las capturas se documentan con sus registros. La declaración completa está en el informe.

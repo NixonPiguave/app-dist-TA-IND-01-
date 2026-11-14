@@ -15,6 +15,7 @@
 - **Datos propios:** a las 22:33 se insertó y consultó `roger-taind01-base`, con confirmación de los tres miembros (`w:3`, `j:true`). Registro: `experimento/resultados/03-datos.txt`.
 - **Prueba de apagado:** a las 22:41 se apagó ordenadamente m1; m2 fue observado como primario y confirmó una nueva inserción con `w:"majority"`. El documento inicial siguió consultable. Registro: `experimento/resultados/04-apagado.txt`.
 - **Recuperación:** a las 22:47 m1 regresó como secundario y se consultaron directamente en él ambos documentos. Se conservaron cuatro capturas y se resumieron las observaciones y límites de la prueba.
+- **Informe:** elaboración del borrador con las fuentes cotejadas, el diagrama digital, los resultados y los ejemplos personales de YouTube y Discord. Comprobación de compilación con pdfLaTeX y Biber; anexos de lectura y revisión personal pendientes.
 
 Los commits y las actualizaciones en GitHub los realizará personalmente el estudiante desde la página del repositorio, conservando la ruta `RogerGarcia/` y los nombres de archivo para mantener la trazabilidad.
 

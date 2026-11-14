@@ -3,7 +3,8 @@
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-tabla]{babel}
 \usepackage[margin=2.5cm]{geometry}
-\usepackage{graphicx,booktabs,tabularx,csquotes}
+\usepackage{graphicx,booktabs,tabularx,csquotes,longtable,float,listings,tikz}
+\usetikzlibrary{arrows.meta}
 \usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
 \DefineBibliographyStrings{spanish}{artno={art.}}
 \addbibresource{referencias.bib}
@@ -12,6 +13,13 @@
 \setlength{\parskip}{0.5em}
 \setlength{\emergencystretch}{2em}
 \newcommand{\pendiente}[1]{\par\noindent\textit{Pendiente: #1}\par}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible}
+\newcommand{\captura}[3]{%
+  \begin{figure}[H]\centering
+  \IfFileExists{#1}{\includegraphics[width=.92\linewidth,height=.34\textheight,keepaspectratio]{#1}}%
+  {\fbox{\parbox{.85\linewidth}{Archivo pendiente: \texttt{\detokenize{#1}}}}}
+  \caption{#2}\label{#3}
+  \end{figure}}
 
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -27,7 +35,7 @@
 \bigskip
 Sistemas Distribuidos --- TA-IND-01\par
 \bigskip
-\textbf{Plantilla inicial de trabajo}\par
+\textbf{Informe académico individual}\par
 \vfill
 \Estudiante\par
 \Paralelo\par
@@ -38,49 +46,26 @@ Carpeta individual: \texttt{\CarpetaEntrega}\par
 \end{titlepage}
 \hypersetup{pageanchor=true}
 
-\section*{Resumen}
-\pendiente{150--200 palabras, redactadas al concluir el análisis y la prueba.}
-
-\section{Introducción}
-\pendiente{Problema, usuarios, escala documentada y motivo de elección.}
-
-\section{Arquitectura del sistema}
-\pendiente{Componentes, comunicación y diagrama propio evolucionado desde el bosquejo a mano.}
-
-\section{Análisis con los conceptos de la Unidad 1}
-\subsection{Transparencias de distribución}
-\pendiente{Acceso, ubicación, migración, reubicación, replicación, concurrencia y fallos; alcance y límites.}
-\subsection{CAP y PACELC}
-\pendiente{Prioridades ante particiones y sin ellas, precisando configuración y evidencia.}
-\subsection{Modelos de comunicación}
-\pendiente{Roles, sincronía y asincronía, protocolos y mecanismos de comunicación.}
-\subsection{Tolerancia a fallos}
-\pendiente{Detección, elección, replicación, recuperación e incidente real documentado.}
-
-\section{Experimentación propia}
-\pendiente{Configuración, comandos, resultados reales, cuatro capturas originales e interpretación.}
-
-\section{Ejemplos del entorno del estudiante}
-\pendiente{Dos observaciones personales verdaderas relacionadas con conceptos de la unidad.}
-
-\section{Análisis comparativo}
-\pendiente{Tabla MongoDB--CouchDB con al menos cinco criterios de la unidad y discusión.}
-
-\section{Postura crítica}
-\pendiente{Fortalezas, limitaciones, compromisos y contextos donde no conviene la elección.}
-
-\section{Conclusiones}
-\pendiente{Afirmaciones derivadas del análisis y del experimento efectivamente realizado.}
-
-\section*{Declaración de uso de inteligencia artificial}
-Se utilizó OpenCode con GPT-6.1 Sol (\texttt{openai/gpt-6.1-sol}) para apoyar la selección de sistemas, la planificación y la preparación de esta estructura inicial. Esta plantilla no acredita lectura personal de fuentes ni ejecución del experimento.
-\pendiente{Actualizar los usos efectivos y describir cómo se verificó cada aporte.}
-
+\input{contenido.tex}
+\clearpage
 \printbibliography[title={Referencias}]
-
+\clearpage
 \appendix
 \section{Esquema inicial a mano}
-\pendiente{Fotografía original con nombre y fecha visibles.}
+La figura corresponde al bosquejo que sirvió de base para el diagrama digital. Se conserva el nombre y la fecha escritos en el original.
+\begin{figure}[H]\centering
+\IfFileExists{figuras/bosquejo.jpg}
+  {\includegraphics[width=.85\linewidth,height=.72\textheight,keepaspectratio]{figuras/bosquejo.jpg}}
+  {\IfFileExists{figuras/bosquejo.png}
+    {\includegraphics[width=.85\linewidth,height=.72\textheight,keepaspectratio]{figuras/bosquejo.png}}
+    {\fbox{\parbox{.85\linewidth}{Pendiente guardar la fotografía original como \texttt{figuras/bosquejo.jpg} o \texttt{figuras/bosquejo.png}.}}}}
+\caption{Bosquejo original de Roger García, fechado el 13 de noviembre de 2026.}
+\label{fig:bosquejo}
+\end{figure}
+\clearpage
 \section{Evidencias de lectura}
-\pendiente{Tres capturas de artículos anotadas personalmente, con página y cita correspondiente.}
+Las capturas deben mostrar los pasajes anotados y su página; no sustituyen el texto del artículo ni las citas bibliográficas.
+\captura{figuras/lectura-01.png}{Pasaje de Carvalho et al.: discusión del rendimiento según las cargas (pp.~14--16), relacionado con la comparación de la sección~\ref{sec:comparacion}.}{fig:lectura1}
+\captura{figuras/lectura-02.png}{Pasaje de Ferreira et al. sobre configuraciones de consistencia (pp.~3--4 o 7), relacionado con la sección~\ref{sec:cap}.}{fig:lectura2}
+\captura{figuras/lectura-03.png}{Pasaje de Khan et al. sobre bases documentales (p.~10), relacionado con la introducción.}{fig:lectura3}
 \end{document}

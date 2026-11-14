@@ -1,0 +1,20 @@
+\begin{tikzpicture}[
+  nodo/.style={draw,rounded corners,align=center,minimum width=3.1cm,
+    minimum height=1.1cm,fill=blue!5,font=\small},
+  flecha/.style={-{Latex[length=2.5mm]},thick},
+  control/.style={{Latex[length=2mm]}-{Latex[length=2mm]},dashed,gray!65!black},
+  etiqueta/.style={font=\scriptsize,fill=white,inner sep=2pt}
+]
+\node[nodo,fill=gray!10] (cliente) at (0,3.2) {Cliente \texttt{mongosh}\\URI del conjunto \texttt{rs0}};
+\node[nodo] (m1) at (0,0.8) {\texttt{m1:27017}\\Primario inicial};
+\node[nodo] (m2) at (-3,-1.8) {\texttt{m2:27017}\\Secundario inicial};
+\node[nodo] (m3) at (3,-1.8) {\texttt{m3:27017}\\Secundario inicial};
+\draw[flecha] (cliente) -- node[etiqueta,right] {operaciones cliente-servidor} (m1);
+\draw[flecha,blue!70!black] (m1) -- node[etiqueta,sloped,above] {oplog} (m2);
+\draw[flecha,blue!70!black] (m1) -- node[etiqueta,sloped,above] {oplog} (m3);
+\draw[control] (m2) -- node[etiqueta,below=8mm] {control entre miembros} (m3);
+\draw[control] (m1.west) to[bend right=27] (m2.north west);
+\draw[control] (m1.east) to[bend left=27] (m3.north east);
+\node[font=\scriptsize,align=center] at (0,-3.4) {Tres procesos con datos y voto; volúmenes separados.\\
+Todos los contenedores comparten el mismo equipo y una red Docker interna.};
+\end{tikzpicture}
