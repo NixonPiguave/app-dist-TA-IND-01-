@@ -164,7 +164,7 @@ El mensaje de error nombra 172.30.0.11, que es la dirección del redis1 detenido
 
 \subsection{Transparencias de distribución}
 
-Reviso las seis transparencias de la guía con lo que observé.
+Reviso las siete transparencias de la guía con lo que observé.
 \begin{itemize}
   \item \emph{Acceso}: se ofrece. Uso los mismos comandos de \texttt{redis-cli} contra cualquier nodo, sea maestro o réplica.
   \item \emph{Ubicación}: se ofrece. Pedí las 30 claves a redis2 sin saber dónde estaba cada una.
@@ -177,13 +177,13 @@ Reviso las seis transparencias de la guía con lo que observé.
 
 \subsection{Consistencia, CAP y PACELC}
 
-La especificación de Redis Cluster admite que hay ventanas pequeñas en las que se pueden perder escrituras ya confirmadas \cite{redis2026clusterspec}. Pasa porque la replicación es asíncrona: el maestro responde al cliente sin esperar a la réplica. Gana latencia y acepta una consistencia más débil. Repin y Sidorov señalan que cachés de propósito general como Redis no garantizan consistencia fuerte \cite{repin2025distributed}. Ferreira et~al.\ midieron MongoDB, Redis y Cassandra. En despliegues en varias regiones, pasar de consistencia débil a fuerte cambió de forma estadísticamente significativa el desempeño de los tres \cite{ferreira2024impacts}.
+La especificación de Redis Cluster admite que hay ventanas pequeñas en las que se pueden perder escrituras ya confirmadas \cite{redis2026clusterspec}. Pasa porque la replicación es asíncrona: el maestro responde al cliente sin esperar a la réplica. Gana latencia y acepta una consistencia más débil. Repin y Sidorov describen a Redis Cluster como un sistema con consistencia eventual \cite{repin2025distributed}. Ferreira et~al.\ midieron MongoDB, Redis y Cassandra. En despliegues en varias regiones, pasar de consistencia débil a fuerte cambió de forma estadísticamente significativa el desempeño de los tres \cite{ferreira2024impacts}.
 
 En mi prueba C no perdí ninguna escritura. Las 11 claves del rango de redis1, incluida \texttt{caida35}, se leyeron después desde redis5. Eso no prueba que la pérdida no pueda ocurrir. Tengo una sola escritura cerca del fallo, un cliente y una caída, así que no puse a prueba la ventana de replicación.
 
 PACELC dice que, con partición de red, hay que elegir entre disponibilidad y consistencia, y que sin partición hay que elegir entre latencia y consistencia. Mi experimento solo toca el caso sin partición. No probé ninguna partición de red.
 
-Repin y Sidorov sí la probaron. En su sección~4 reportan, con contenedores Docker, pérdida de datos en Redis Cluster cuando falla un líder o una réplica (texto en la p.~9 y tabla~6 en la p.~11 \cite{repin2025distributed}, anexo~B). Para tirar un nodo usaron la misma técnica que yo, detener el contenedor. Mi resultado es distinto: no perdí ninguna escritura confirmada. El artículo no dice cuántas claves escribieron, si escribían durante la caída ni cómo configuraron las réplicas, y no puedo explicar la diferencia. Mi prueba tiene 39 escrituras, un cliente y una caída. Tampoco puedo confirmar ni contradecir lo que ellos observaron con la partición de red.
+Repin y Sidorov dicen que Redis Cluster parece propenso a perder datos cuando falla un nodo (p.~9 y tabla~6 en la p.~11 \cite{repin2025distributed}, anexo~B). Probaron cada nodo en un contenedor Docker y emularon los fallos con un proxy TCP. Yo detuve los contenedores con \texttt{docker stop}. Mi resultado es distinto: no perdí ninguna escritura confirmada. En lo que leí, el artículo no dice cuántas claves escribieron ni si escribían durante la caída. No puedo explicar la diferencia con mi prueba de 39 escrituras, un cliente y una caída.
 
 \subsection{Modelos de comunicación}
 
@@ -193,7 +193,7 @@ Las conexiones son TCP, tanto en el puerto de datos 6379 como en el bus 16379. N
 
 \subsection{Tolerancia a fallos}
 
-Kumari y Kaur clasifican las técnicas de tolerancia a fallos en reactivas y proactivas, y listan parámetros para evaluarlas: tiempo de respuesta, rendimiento, fiabilidad y disponibilidad \cite{kumari2021survey}. Rehman et~al.\ también revisan enfoques proactivos y reactivos \cite{rehman2022fault}. Una técnica reactiva actúa después de que ocurre el fallo. Redis Cluster replica los datos antes del fallo, pero la promoción empieza recién cuando detecta la caída. En esas métricas, la disponibilidad volvió en unos 8~s sin intervención mía. El costo fue una ventana sin maestro para 5461 slots, cerca de un tercio del espacio de claves.
+Kumari y Kaur clasifican las técnicas de tolerancia a fallos en reactivas y proactivas, y evalúan con tiempo de respuesta, rendimiento, fiabilidad y disponibilidad \cite{kumari2021survey}. Rehman et~al.\ también revisan enfoques proactivos y reactivos \cite{rehman2022fault}. Una técnica reactiva actúa después del fallo. En Redis Cluster las réplicas existen antes, pero la promoción empieza cuando se detecta la caída. Medida con esos criterios, la disponibilidad volvió en unos 8~s sin intervención mía. El costo fue una ventana sin maestro para 5461 slots, cerca de un tercio de las claves.
 
 Huang et~al.\ estudiaron 22 fallos metaestables en 11 organizaciones y reportan que al menos 4 de las 15 caídas grandes de AWS de la última década fueron de este tipo \cite{huang2022metastable}. Mi bloqueo de 38~s no es uno de esos fallos: fue un solo intento y nada amplificó la carga. Me deja una lección práctica. Un cliente real sin límite de espera puede quedarse esperando a un nodo caído, así que conviene poner tiempos de espera cortos y limitar los reintentos.
 
@@ -203,7 +203,7 @@ Uso WhatsApp todos los días. Cuando me quedo sin internet o activo el modo avi�
 
 En mi chat el orden queda distinto del real. Escribo un mensaje a las 8:30 y reconecto a las 9:00. Mientras tanto me llegaron mensajes a las 8:40. Mi mensaje aparece antes de esos, con la hora 8:30, aunque salió a las 9:00. La otra persona ve el orden real de envío. Dos clientes muestran órdenes distintos de la misma conversación.
 
-Es una observación de uso, no una medición. No anoté la fecha ni la hora de un caso concreto porque me pasa seguido. Tampoco sé cómo WhatsApp ordena los mensajes por dentro. Lo relaciono con el experimento porque allí también los nodos vieron estados distintos durante un rato: redis2 tardó unos 8~s en ver a redis1 como maestro después de detener redis5. En WhatsApp la entrega se retrasa mientras no hay conexión, y la transparencia de fallos es parcial.
+Es una observación de uso, no una medición. No anoté la fecha ni la hora de un caso concreto porque me pasa seguido. Tampoco sé cómo WhatsApp ordena los mensajes por dentro. Lo relaciono con el experimento porque en ambos casos hay un periodo en que cada parte ve un estado distinto: redis2 tardó unos 8~s en ver a redis1 como maestro. La transparencia ante fallos de WhatsApp es parcial: me avisa que el mensaje no salió, pero el orden final lo decide el sistema.
 
 \subsection{Escalabilidad bajo carga: ejemplo de mi entorno}
 
@@ -228,7 +228,7 @@ Criterio & Redis Cluster & Memcached \\
 \midrule
 Distribución de claves & 16384 slots repartidos entre maestros; el clúster redirige con \texttt{MOVED} \cite{redis2026clusterspec}. Lo observé en mi montaje. & El cliente elige el servidor con un algoritmo de hash según la clave \cite[p.~7]{mishra2021memcached}. \\
 Comunicación entre nodos & Malla completa con gossip por el bus del clúster \cite{redis2026clusterspec}. & Los servidores no comparten datos entre sí \cite[p.~7]{mishra2021memcached}. \\
-Replicación y fallo de un nodo & Una réplica por maestro. Promoción automática en unos 8~s en mi prueba. & Sin replicación entre servidores, por lo anterior. No probé la caída de un servidor. Que sus claves dejen de estar disponibles es una inferencia mía. \\
+Replicación y fallo de un nodo & Una réplica por maestro. Promoción automática en unos 8~s en mi prueba. & Los servidores no comparten datos, así que no hay réplica entre ellos. Que sus claves queden sin servir si cae uno es inferencia mía: no lo probé. \\
 Política de expulsión & KLRU: expulsa el menos reciente de $K$ muestras elegidas al azar \cite[p.~1]{yang2023memcached}. & LRU o una variante segmentada (SegLRU) \cite[p.~1]{yang2023memcached}. \\
 Modelo de hilos y escalabilidad & Un solo hilo para procesar comandos \cite{bodra2025comparative}. & Escalabilidad casi lineal con hilos en cargas de lectura. Baja cuando la carga pasa a escritura \cite{yang2023memcached}. Es un estudio de una sola máquina. \\
 Seguridad & No la evalué y no tengo fuente. & UDP activo por defecto hasta la versión 1.5.5. Se recomienda bloquear el puerto 11211 y desactivar UDP \cite{mishra2021memcached}. \\
@@ -256,7 +256,7 @@ Con mis datos, Redis Cluster sirve cuando hace falta recuperarse de la caída de
 \subsection{Limitaciones}
 
 \begin{itemize}
-  \item Medí el tiempo de promoción una sola vez y con una resolución de unas décimas de segundo. No hay promedio ni dispersión.
+  \item Medí el tiempo de promoción una sola vez, consultando cada 200~ms. No hay promedio ni dispersión.
   \item No medí la ventana de errores de las escrituras. El escritor es secuencial y su único intento dirigido al maestro caído se bloqueó unos 38~s.
   \item Tiré un solo maestro de tres, en un solo equipo con seis contenedores. No probé una partición de red ni la caída de un maestro junto con su réplica.
   \item Bodra y Khairnar no reportan versiones de software y probaron un solo nodo, así que no uso sus cifras de latencia.
@@ -268,15 +268,16 @@ Con mis datos, Redis Cluster sirve cuando hace falta recuperarse de la caída de
 \begin{enumerate}
   \item Al detener un maestro, una réplica fue vista como nuevo maestro 8.02~s después (una medición, con \texttt{cluster-node-timeout} de 5000~ms). La época de configuración subió de 7 a 8 y a 9 en las tres promociones.
   \item Durante la caída se confirmaron 38 de 39 escrituras y las 38 se leyeron después. La otra quedó bloqueada unos 38~s por falta de tiempo de espera, no por un rechazo del clúster.
-  \item Mi resultado de no perder escrituras difiere del de Repin y Sidorov, que reportan pérdida de datos al fallar un líder o una réplica. Mi prueba es demasiado pequeña para explicar la diferencia.
+  \item Mi resultado de no perder escrituras difiere del de Repin y Sidorov, que reportan riesgo de pérdida de datos al fallar un nodo. Mi prueba es demasiado pequeña para explicar la diferencia.
   \item Frente a Memcached, Redis Cluster ubica las claves en el clúster, las replica y promueve réplicas solo. Memcached deja la ubicación al cliente, no comparte datos entre servidores y usa LRU en vez de KLRU. Lo que no verifiqué está marcado en la tabla.
+  \item Un cliente sin tiempo de espera puede quedar bloqueado unos 38~s contra un nodo caído. Hay que configurar tiempos de espera cortos.
 \end{enumerate}
 
 \section{Declaración de uso de inteligencia artificial}
 
-Usé Claude (Anthropic) en la aplicación claude.ai. En la sesión del 13 de noviembre de 2026 el modelo era Claude Sonnet 5.5. Lo usé para planificar el trabajo, buscar y comprobar fuentes, redactar borradores de \texttt{comandos.md}, \texttt{resultados.md}, \texttt{ejemplos-entorno.md} y de este informe, y corregir errores de formato.
+Usé Claude (Anthropic) en la aplicación claude.ai. En la sesión del 13 de noviembre de 2026 el modelo era Claude Sonnet 5.5. Lo usé para planificar el trabajo, buscar y comprobar fuentes, redactar borradores de \texttt{comandos.md}, \texttt{resultados.md}, \texttt{ejemplos-entorno.md} y de este informe, generar un borrador del diagrama de arquitectura, y corregir errores de formato.
 
-Para verificar lo obtenido, ejecuté yo todos los comandos del experimento y comparé cada salida con lo escrito. Con Claude abrimos en el navegador el DOI de cada fuente, y comparé autores, año, revista, volumen y páginas con la página del editor. Comprobé en los PDF las páginas que cito: Repin y Sidorov (p.~9 y~11), Yang et~al.\ (p.~1) y Mishra et~al.\ (p.~7). Las observaciones sobre WhatsApp y el SGA son mías.
+Para verificar lo obtenido, ejecuté yo todos los comandos del experimento y comparé cada salida con lo escrito. Abrí en el navegador el DOI de cada fuente, y comparé autores, año, revista, volumen y páginas con la página del editor. Comprobé en los PDF las páginas que cito: Repin y Sidorov (p.~9 y~11), Yang et~al.\ (p.~1) y Mishra et~al.\ (p.~7). Las observaciones sobre WhatsApp y el SGA son mías.
 
 \printbibliography[title={Referencias}]
 
