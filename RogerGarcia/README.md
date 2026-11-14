@@ -18,7 +18,7 @@ El repositorio es compartido, pero esta carpeta reúne únicamente mi entrega in
 
 **Sistema principal:** MongoDB Community. **Comparador:** Apache CouchDB.
 
-Primera versión: estructura del informe en LaTeX y bitácora. El contenido académico, las fuentes cotejadas, el laboratorio y las evidencias se incorporarán durante el trabajo. No se presentan todavía resultados experimentales.
+MongoDB está iniciado con un primario y dos secundarios. Se conservan el registro de configuración y la primera captura. La prueba de cambio de primario y el desarrollo del informe siguen pendientes.
 
 ## Estructura inicial
 
@@ -26,6 +26,11 @@ Primera versión: estructura del informe en LaTeX y bitácora. El contenido acad
 RogerGarcia/
 ├── README.md
 ├── BITACORA.md
+├── experimento/
+│   ├── compose.yaml
+│   ├── GUIA.md
+│   ├── resultados/
+│   └── capturas/
 ├── informe/
 │   ├── datos.tex
 │   ├── main.tex
@@ -34,7 +39,11 @@ RogerGarcia/
     └── compilar.sh
 ```
 
-Las figuras, capturas, comandos, resultados y el PDF final del informe se añadirán cuando existan. No se incluyen carpetas vacías, capturas simuladas ni documentos internos de preparación.
+Las demás evidencias y el PDF final del informe se añadirán durante el desarrollo.
+
+## Experimento
+
+La [guía del laboratorio](experimento/GUIA.md) contiene los comandos para ejecutar tres réplicas de MongoDB con Docker Compose. Se necesita acceso a Docker; en este equipo se utiliza `sudo` para sus comandos. Las salidas y capturas se guardarán dentro de `experimento/`.
 
 ## Compilación del informe
 
@@ -71,4 +80,4 @@ Las actualizaciones se subirán manualmente desde GitHub, conservando rutas y no
 
 ## Uso de inteligencia artificial
 
-Se utilizó OpenCode con GPT-6.1 Sol (`openai/gpt-6.1-sol`) para selección de sistemas, planificación y preparación asistida de las plantillas. La declaración del informe se actualizará con los usos efectivos y las verificaciones realizadas. Este apoyo no acredita ejecución del experimento, lectura personal ni capturas todavía inexistentes.
+Se utilizó OpenCode con GPT-6.1 Sol (`openai/gpt-6.1-sol`) para selección de sistemas, planificación y preparación de plantillas, configuración y comandos. La declaración del informe se actualizará con los usos efectivos y las verificaciones realizadas. La ejecución y las capturas se documentan con sus registros correspondientes.

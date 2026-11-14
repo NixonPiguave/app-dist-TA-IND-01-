@@ -1,0 +1,35 @@
+name: taind01-roger-mongo
+
+# Laboratorio local: red interna, sin puertos publicados ni datos privados.
+x-mongo: &mongo
+  image: mongo:8.0.16@sha256:4b58ebcb1dc7a7b4e84cd8ce9098d48764ae4478876898ff9551acf2ac4a6a6d
+  command: [mongod, --replSet, rs0, --bind_ip_all, --wiredTigerCacheSizeGB, "0.5"]
+  restart: "no"
+  mem_limit: 2g
+  networks: [laboratorio]
+  healthcheck:
+    test: [CMD, mongosh, --quiet, --eval, "quit(db.adminCommand({ping:1}).ok === 1 ? 0 : 1)"]
+    interval: 5s
+    timeout: 5s
+    retries: 30
+    start_period: 10s
+
+services:
+  m1:
+    <<: *mongo
+    volumes: [m1data:/data/db]
+  m2:
+    <<: *mongo
+    volumes: [m2data:/data/db]
+  m3:
+    <<: *mongo
+    volumes: [m3data:/data/db]
+
+networks:
+  laboratorio:
+    internal: true
+
+volumes:
+  m1data:
+  m2data:
+  m3data:

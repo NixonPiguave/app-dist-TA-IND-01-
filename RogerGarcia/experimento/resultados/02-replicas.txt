@@ -1,0 +1,19 @@
+{
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1794622019, i: 1 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1794622019, i: 1 })
+}
+MongoServerError: already initialized
+roger
+omarchy
+2026-11-13T21:09:40-05:00
+MongoDB 8.0.16
+m1:27017 | PRIMARY | salud=1
+m2:27017 | SECONDARY | salud=1
+m3:27017 | SECONDARY | salud=1
