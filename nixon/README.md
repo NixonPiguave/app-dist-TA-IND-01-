@@ -22,7 +22,7 @@ Se ejecutó NATS 2.15.3 con JetStream en un clúster local de tres nodos. Se com
 
 Se realizó además una prueba de caída abrupta del líder mediante SIGKILL: nats3 asumió el liderazgo, se recuperó el mensaje anterior y se publicó y recuperó un segundo mensaje con nats1 detenido. Al reiniciar nats1, los tres nodos volvieron a figurar sincronizados y el flujo conservó los dos mensajes.
 
-Se conserva el bosquejo inicial a mano, siete capturas de ejecución, las configuraciones y las salidas. El informe LaTeX integra el análisis de la Unidad 1, la arquitectura digital, los dos ejemplos personales, una tabla comparativa de ocho criterios y los anexos A y B. La bibliografía contiene 14 fuentes citadas: tres artículos de revista con DOI, cuatro publicaciones técnicas de 2025-2026 y siete páginas de documentación oficial consultadas el 14 de noviembre de 2026. El video de sustentación está pendiente.
+Se conserva el bosquejo inicial a mano, siete capturas de ejecución, las configuraciones y las salidas. El informe LaTeX integra el análisis de la Unidad 1, la arquitectura digital, los dos ejemplos personales, una tabla comparativa de ocho criterios y los anexos A y B. La bibliografía contiene 14 fuentes citadas: tres artículos de revista con DOI, cuatro publicaciones técnicas de 2025-2026 y siete páginas de documentación oficial consultadas el 14 de noviembre de 2026. El video de sustentación está publicado en YouTube y su enlace está incluido al final de este README.
 
 ## Procedimiento y configuraciones
 
@@ -88,4 +88,7 @@ La estructura de carpetas debe conservarse: el documento utiliza rutas relativas
 
 ## Video de sustentación
 
-Pendiente de grabación y publicación.
+[Ver el video de sustentación en YouTube](https://youtu.be/beDuRMhGtJM)
+
+**Duración:** 4 minutos y 54 segundos.  
+**Visibilidad:** no listado.

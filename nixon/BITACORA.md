@@ -85,20 +85,28 @@
 - Integré las capturas, el bosquejo y las referencias en el PDF; se comprobó la compilación y actualicé las instrucciones del README.
 - Preparé por separado el PDF de una página con mis datos y la URL del repositorio para el SGA.
 
+- Preparé, grabé y publiqué el video de sustentación en YouTube.
+- Actualicé el README con el enlace del video.
+
 ### Problema encontrado
 
 - Necesitaba relacionar mis experiencias con los conceptos de la unidad sin afirmar causas técnicas que no podía comprobar.
 - Faltaba integrar las evidencias y el análisis en un informe que pudiera compilarse con sus referencias y figuras.
+
+- No tuve inconvenientes durante la preparación, grabación y publicación del video.
 
 ### Cómo lo resolví
 
 - Expliqué lo que observé como usuario y lo relacioné con los reintentos y la confirmación del estado de las operaciones, sin dar por comprobada la causa del problema.
 - Organicé el informe con los archivos y las salidas existentes, se contrastaron las fuentes, se compiló el PDF y se revisaron sus figuras, tablas y citas.
 
+- Publiqué el video y añadí su enlace al README.
+
 ### Tiempo dedicado
 
-1 Hora y 30 minutos:
+1 Hora y 50 minutos:
 -1 Hora y 30 minutos de preparación del informe y sus archivos.
+-20 minutos de preparación, grabación y publicación del video de sustentación.
 
 ### Uso de IA
 -La utilicé para la estructura del informe, generar el borrador del diagrama y revisar la redacción. Los DOI y los PDF los verifique personalmente
