@@ -1,0 +1,313 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{csquotes}
+\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+
+\addbibresource{referencias.bib}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+
+\newcommand{\captura}[3]{%
+  \begin{figure}[htbp]\centering
+    \includegraphics[width=#2\linewidth]{#1}
+    \caption{#3}
+  \end{figure}}
+
+\title{Análisis crítico de Redis Cluster como sistema distribuido,\\comparado con Memcached}
+\author{Eduardo David Reinoso Vélez\\
+Universidad Técnica Estatal de Quevedo (UTEQ), Facultad de Ciencias de la Computación\\
+Ingeniería de Software, 7.\textsuperscript{o} nivel, paralelo A\\
+Aplicaciones Distribuidas (ISR-701), actividad TA-IND-01\\
+Repositorio: \url{https://github.com/NixonPiguave/app-dist-TA-IND-01-}}
+\date{13 de noviembre de 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analizo Redis en modo Redis Cluster y lo comparo con Memcached. Monté un clúster de seis contenedores Docker, con tres maestros y tres réplicas, y detuve maestros en tres pruebas el 12 de noviembre de 2026. Con \texttt{cluster-node-timeout} de 5000~ms, redis2 vio a una réplica como nuevo maestro 8.02~s después de terminar el \texttt{docker stop}. En la prueba con escrituras continuas hice 39 intentos. Se confirmaron 38 y las 38 se leyeron después. El otro quedó bloqueado unos 38~s porque no configuré un tiempo de espera en el cliente. Con esto describo qué transparencias de distribución ofrece Redis Cluster, qué prioriza entre latencia y consistencia y cómo tolera la caída de un nodo. Cada medición se hizo una vez y con un solo cliente, así que no calculo promedios. Memcached lo comparo solo con fuentes, porque no lo probé. La promoción automática funcionó sin intervención mía, pero el cliente necesita tiempos de espera cortos. Mi resultado de cero escrituras perdidas difiere del de Repin y Sidorov, y mi prueba es demasiado pequeña para explicar la diferencia.
+\end{abstract}
+
+\section{Introducción y alcance}
+
+Analizo Redis en modo Redis Cluster y lo comparo con Memcached. Elegí Redis porque se usa como caché y como almacén de claves en memoria, y porque su modo clúster reparte datos y replica entre nodos. Eso me permite provocar fallos y ver qué hace el sistema. El problema que resuelve es guardar y servir datos clave-valor en memoria con baja latencia, sin que un solo servidor sea el punto único de fallo. No tengo cifras verificadas de la escala a la que opera en producción. Mi clúster es de seis nodos en un solo equipo. Memcached es otra caché en memoria, con un diseño más simple.
+
+Quiero responder tres preguntas:
+\begin{enumerate}
+  \item ¿Cómo reparte y replica los datos Redis Cluster, y qué pasa cuando cae un maestro?
+  \item ¿Qué transparencias y qué garantías de consistencia tiene, según lo que observo y lo que dicen las fuentes?
+  \item ¿En qué se diferencia de Memcached?
+\end{enumerate}
+
+El experimento lo hice el 12 de noviembre de 2026 en mi equipo con Windows, Docker Desktop (servidor Docker 29.9.3, Compose v5.7.0) y la imagen \texttt{redis:7.2}. Los comandos, las salidas y las capturas están en las carpetas \texttt{experimento/} y \texttt{capturas/} del repositorio. El \texttt{README.md} explica cómo reproducirlo.
+
+\section{Arquitectura de Redis Cluster}
+
+\subsection{Reparto de datos}
+
+Redis Cluster divide las claves en 16384 slots. El slot de una clave sale de CRC16 de la clave módulo 16384 \cite{redis2026clusterspec}. En mi clúster, \texttt{cluster nodes} muestra los 16384 slots repartidos entre tres maestros, y cada maestro tiene una réplica (tabla~\ref{tab:nodos} y figura~\ref{fig:nodos}).
+
+\begin{table}[htbp]
+\centering
+\caption{Estado inicial del clúster (salida de \texttt{cluster nodes}).}
+\label{tab:nodos}
+\begin{tabular}{llll}
+\toprule
+Maestro & Slots & Réplica & IP del maestro \\
+\midrule
+redis1 & 0--5460 & redis5 & 172.30.0.11 \\
+redis2 & 5461--10922 & redis6 & 172.30.0.12 \\
+redis3 & 10923--16383 & redis4 & 172.30.0.13 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\captura{capturas/01-cluster-nodes.png}{0.95}{Estado inicial: seis nodos conectados, tres maestros con sus réplicas (captura propia, 12-nov-2026).\label{fig:nodos}}
+
+Cada nodo usa tres opciones: \texttt{cluster-enabled yes}, \texttt{cluster-node-timeout 5000} y \texttt{appendonly yes}. Bodra y Khairnar dicen que Redis guarda sus datos con instantáneas periódicas o con un archivo de solo anexado \cite{bodra2025comparative}. Yo usé el archivo de solo anexado.
+
+La figura~\ref{fig:arq} muestra la arquitectura que armé, hecha con draw.io. Parte del boceto a mano del anexo~A, que dibujé antes del experimento. El boceto tenía el cliente conectado a los tres maestros, una réplica por maestro con la nota ``toma lugar si cae'' y una línea de puntos entre los maestros con la palabra ``se avisan''. Con el experimento corregí tres cosas. Primero, el cliente se conecta a un solo nodo (redis2) y recibe redirecciones \texttt{MOVED}, no habla con los tres a la vez. Segundo, ``se avisan'' pasó a ser el bus del clúster en el puerto 16379, que une a los seis nodos. Tercero, ``copia'' pasó a ser replicación asíncrona. Agregué también las direcciones IP, el rango de slots de cada maestro y una leyenda. El boceto no incluía los slots, que aparecieron al revisar \texttt{cluster nodes}.
+
+\captura{figuras/arquitectura.pdf}{0.98}{Arquitectura del clúster en el estado inicial (diagrama propio).\label{fig:arq}}
+
+\subsection{Comunicación entre nodos}
+
+Cada nodo abre un puerto extra para el bus del clúster. Los nodos forman una malla completa y se pasan el estado con un protocolo gossip \cite{redis2026clusterspec}. En mi salida el puerto del bus es el 16379, junto al puerto de datos 6379. Los contadores de \texttt{cluster info} muestran ese tráfico. En redis2, después de la primera caída, aparecen \texttt{fail\_sent:5}, \texttt{fail\_received:2}, \texttt{auth-req\_received:1} y \texttt{auth-ack\_sent:1}.
+
+\subsection{Acceso del cliente}
+
+Si un cliente pide una clave que no es del nodo consultado, el nodo responde con una redirección \texttt{MOVED} \cite{redis2026clusterspec}. La opción \texttt{-c} de \texttt{redis-cli} sigue esa redirección. Escribí 30 claves y después las pedí todas a redis2, que guardaba solo 11. Las 30 respondieron con su valor. Las otras 19 las obtuvo el cliente por redirecciones, sin que yo supiera en qué nodo estaba cada una.
+
+\subsection{Modelo de ejecución}
+
+Bodra y Khairnar describen a Redis con un solo hilo para procesar comandos. Dicen también que el modo clúster permite escalar al repartir datos entre nodos, a cambio de más complejidad de despliegue \cite{bodra2025comparative}. Ellos probaron configuraciones de un solo nodo y dejan el modo clúster como trabajo futuro. Por eso uso esa fuente para describir el modelo de ejecución y no para comparar rendimiento con mi clúster.
+
+\section{Experimento propio: caída de un maestro}
+
+Las tres pruebas se hicieron una tras otra sobre el mismo clúster. Cada una parte de los roles que dejó la anterior.
+
+\subsection{Prueba A: caída de redis1 con 30 claves}
+
+Escribí \texttt{clave1} a \texttt{clave30}. El \texttt{dbsize} fue 10 en redis1, 11 en redis2 y 9 en redis3, que suman 30. Su réplica redis5 tenía las mismas 10 claves que redis1. Detuve redis1 con \texttt{docker stop}.
+
+Al listar los nodos desde redis2, redis1 figuraba como \texttt{master,fail} y redis5 como \texttt{master} de los slots 0--5460, con época (epoch) 7. \texttt{cluster info} reportó \texttt{cluster\_state:ok} y los 16384 slots asignados. Las 30 claves respondieron. Al arrancar redis1 de nuevo, volvió como réplica de redis5 y no recuperó su rol de maestro.
+
+\captura{capturas/04-promocion-de-replica.png}{0.95}{Tras la caída de redis1: \texttt{cluster info} con el clúster en estado \texttt{ok} y redis5 promovido (captura propia, 12-nov-2026).}
+
+\subsection{Prueba B: tiempo de promoción}
+
+Partí de redis5 como maestro de 0--5460 y redis1 como su réplica. Detuve redis5 y consulté \texttt{cluster nodes} desde redis2 cada 200~ms hasta ver a redis1 como \texttt{master}.
+
+\begin{table}[htbp]
+\centering
+\caption{Tiempos de la prueba B (hora de \texttt{Get-Date}).}
+\label{tab:promocion}
+\begin{tabular}{ll}
+\toprule
+Evento & Hora \\
+\midrule
+\texttt{docker stop redis5} emitido & 20:21:56.267 \\
+\texttt{docker stop redis5} terminó & 20:21:57.013 \\
+redis2 ve a redis1 como \texttt{master} & 20:22:05.033 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pasaron 8.02~s desde que terminó el \texttt{stop} y 8.77~s desde que lo emití. Al final redis1 era maestro de 0--5460 con época 8, y redis5 quedó como \texttt{master,fail} con época 7.
+
+La especificación de Redis Cluster explica de dónde puede salir ese tiempo. Un nodo que no responde durante \texttt{NODE\_TIMEOUT} se marca como \texttt{PFAIL}. Pasa a \texttt{FAIL} cuando la mayoría de los maestros lo reporta. Después la réplica espera 500~ms, más un valor aleatorio de hasta 500~ms, más 1000~ms por su rango, y recién entonces pide votos a los maestros \cite{redis2026clusterspec}. Con mi \texttt{cluster-node-timeout} de 5000~ms, la espera mínima ya pasa de 5~s. Los 8~s que medí son coherentes con eso.
+
+No separé las fases ni repetí la medición. No sé cuántos de los 8~s fueron detección, espera de la réplica o votación. Medí cuándo redis2 se enteró de la promoción. No medí cuándo un cliente pudo volver a escribir.
+
+\captura{capturas/06-redis5-detenido-promocion-medida.png}{0.95}{Prueba B: redis5 detenido y promoción de redis1 medida con el bucle de consulta (captura propia, 12-nov-2026).}
+
+\subsection{Prueba C: escrituras durante la caída}
+
+Partí de redis1 como maestro de 0--5460 y redis5 como su réplica. Un solo script escribió las claves \texttt{caida1}, \texttt{caida2}, etc., una tras otra durante 40~s, a través de redis2. A los 10~s detuvo redis1. El script guardó en un CSV la hora de cada intento.
+
+\begin{table}[htbp]
+\centering
+\caption{Línea de tiempo de la prueba C.}
+\label{tab:escrituras}
+\small
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Hora & Qué pasó \\
+\midrule
+20:33:31.3 a 20:33:40.9 & \texttt{caida1} a \texttt{caida35}: todas OK, unos 0.28~s por intento. \\
+20:33:40.974 a 20:33:41.410 & \texttt{docker stop redis1}. \\
+20:33:41.6 a 20:33:42.1 & \texttt{caida36}, \texttt{caida37} y \texttt{caida38}: OK. Sus slots (14763, 10634 y 6245) son de redis3 y redis2. \\
+20:33:42 a 20:34:20.321 & \texttt{caida39} (slot 2116, rango de redis1): bloqueada unos 38~s. Terminó con \texttt{Could not connect to Redis at 172.30.0.11:6379: No route to host}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Hubo 39 intentos: 38 confirmados con \texttt{OK} y uno con error. Releí las 38 confirmadas con \texttt{get} en modo clúster y no faltó ninguna. De las 35 claves escritas antes del \texttt{stop}, 11 estaban en el rango de redis1 (\texttt{caida1}, 4, 5, 8, 9, 13, 17, 22, 26, 31 y 35). \texttt{caida35} se escribió 0.12~s antes de emitir el \texttt{stop}. Después de la caída, redis5 era maestro de 0--5460 con época 9. Las épocas de las tres promociones fueron 7, 8 y 9.
+
+\captura{capturas/07-escrituras-durante-la-caida.png}{0.95}{Prueba C: resultado del script de escrituras durante la caída de redis1 (captura propia, 12-nov-2026).}
+
+El mensaje de error nombra 172.30.0.11, que es la dirección del redis1 detenido. Mi lectura es que \texttt{redis-cli -c} siguió una redirección de redis2 hacia el dueño del slot, que un segundo después del \texttt{stop} todavía era redis1. Es una inferencia, porque no guardé la respuesta de redis2. No configuré ningún límite de espera, y el cliente tardó unos 38~s en recibir \texttt{No route to host}.
+
+\section{Análisis desde la Unidad 1}
+
+\subsection{Transparencias de distribución}
+
+Reviso las seis transparencias de la guía con lo que observé.
+\begin{itemize}
+  \item \emph{Acceso}: se ofrece. Uso los mismos comandos de \texttt{redis-cli} contra cualquier nodo, sea maestro o réplica.
+  \item \emph{Ubicación}: se ofrece. Pedí las 30 claves a redis2 sin saber dónde estaba cada una.
+  \item \emph{Migración}: no la probé. La especificación describe cómo mover slots entre nodos \cite{redis2026clusterspec}, pero yo no hice ninguna migración.
+  \item \emph{Reubicación}: se ofrece a medias. En la prueba A los slots 0--5460 pasaron de redis1 a redis5 y las lecturas siguieron respondiendo. En la prueba C una escritura quedó bloqueada unos 38~s mientras el dueño del slot cambiaba.
+  \item \emph{Replicación}: se ofrece. Las lecturas no distinguen si el dato salió de un maestro o de una réplica promovida. Tras la caída, las 10 claves de redis1 se sirvieron desde redis5.
+  \item \emph{Concurrencia}: no la probé. Usé un solo cliente. Bodra y Khairnar dicen que cada nodo procesa los comandos con un solo hilo \cite{bodra2025comparative}, lo que ordena los comandos dentro de un nodo.
+  \item \emph{Fallos}: se ofrece en parte. Las lecturas posteriores a la promoción no dieron ningún error. Pero \texttt{caida39} no recibió un rechazo rápido, sino un bloqueo de unos 38~s. Y entre la caída y la promoción los slots 0--5460 no tienen maestro.
+\end{itemize}
+
+\subsection{Consistencia, CAP y PACELC}
+
+La especificación de Redis Cluster admite que hay ventanas pequeñas en las que se pueden perder escrituras ya confirmadas \cite{redis2026clusterspec}. Pasa porque la replicación es asíncrona: el maestro responde al cliente sin esperar a la réplica. Gana latencia y acepta una consistencia más débil. Repin y Sidorov señalan que cachés de propósito general como Redis no garantizan consistencia fuerte \cite{repin2025distributed}. Ferreira et~al.\ midieron MongoDB, Redis y Cassandra. En despliegues en varias regiones, pasar de consistencia débil a fuerte cambió de forma estadísticamente significativa el desempeño de los tres \cite{ferreira2024impacts}.
+
+En mi prueba C no perdí ninguna escritura. Las 11 claves del rango de redis1, incluida \texttt{caida35}, se leyeron después desde redis5. Eso no prueba que la pérdida no pueda ocurrir. Tengo una sola escritura cerca del fallo, un cliente y una caída, así que no puse a prueba la ventana de replicación.
+
+PACELC dice que, con partición de red, hay que elegir entre disponibilidad y consistencia, y que sin partición hay que elegir entre latencia y consistencia. Mi experimento solo toca el caso sin partición. No probé ninguna partición de red.
+
+Repin y Sidorov sí la probaron. En su sección~4 reportan, con contenedores Docker, pérdida de datos en Redis Cluster cuando falla un líder o una réplica (texto en la p.~9 y tabla~6 en la p.~11 \cite{repin2025distributed}, anexo~B). Para tirar un nodo usaron la misma técnica que yo, detener el contenedor. Mi resultado es distinto: no perdí ninguna escritura confirmada. El artículo no dice cuántas claves escribieron, si escribían durante la caída ni cómo configuraron las réplicas, y no puedo explicar la diferencia. Mi prueba tiene 39 escrituras, un cliente y una caída. Tampoco puedo confirmar ni contradecir lo que ellos observaron con la partición de red.
+
+\subsection{Modelos de comunicación}
+
+Entre el cliente y el clúster el modelo es cliente-servidor y síncrono. Cada \texttt{set} espera la respuesta antes de seguir. Lo vi en la prueba C: unos 0.28~s por intento, y un intento que esperó unos 38~s. Entre los nodos el modelo es de igual a igual: forman una malla y se pasan el estado con gossip por el bus del clúster \cite{redis2026clusterspec}. El conjunto es un modelo híbrido.
+
+Las conexiones son TCP, tanto en el puerto de datos 6379 como en el bus 16379. No usé RPC ni colas de mensajes en el experimento. La replicación del maestro a su réplica es asíncrona \cite{redis2026clusterspec}.
+
+\subsection{Tolerancia a fallos}
+
+Kumari y Kaur clasifican las técnicas de tolerancia a fallos en reactivas y proactivas, y listan parámetros para evaluarlas: tiempo de respuesta, rendimiento, fiabilidad y disponibilidad \cite{kumari2021survey}. Rehman et~al.\ también revisan enfoques proactivos y reactivos \cite{rehman2022fault}. Una técnica reactiva actúa después de que ocurre el fallo. Redis Cluster replica los datos antes del fallo, pero la promoción empieza recién cuando detecta la caída. En esas métricas, la disponibilidad volvió en unos 8~s sin intervención mía. El costo fue una ventana sin maestro para 5461 slots, cerca de un tercio del espacio de claves.
+
+Huang et~al.\ estudiaron 22 fallos metaestables en 11 organizaciones y reportan que al menos 4 de las 15 caídas grandes de AWS de la última década fueron de este tipo \cite{huang2022metastable}. Mi bloqueo de 38~s no es uno de esos fallos: fue un solo intento y nada amplificó la carga. Me deja una lección práctica. Un cliente real sin límite de espera puede quedarse esperando a un nodo caído, así que conviene poner tiempos de espera cortos y limitar los reintentos.
+
+\subsection{Orden de eventos: ejemplo de mi entorno}
+
+Uso WhatsApp todos los días. Cuando me quedo sin internet o activo el modo avión, mis mensajes no salen. Al reconectar, el envío ocurre entre 1 y 3~s después, según cuántos mensajes tenga pendientes.
+
+En mi chat el orden queda distinto del real. Escribo un mensaje a las 8:30 y reconecto a las 9:00. Mientras tanto me llegaron mensajes a las 8:40. Mi mensaje aparece antes de esos, con la hora 8:30, aunque salió a las 9:00. La otra persona ve el orden real de envío. Dos clientes muestran órdenes distintos de la misma conversación.
+
+Es una observación de uso, no una medición. No anoté la fecha ni la hora de un caso concreto porque me pasa seguido. Tampoco sé cómo WhatsApp ordena los mensajes por dentro. Lo relaciono con el experimento porque allí también los nodos vieron estados distintos durante un rato: redis2 tardó unos 8~s en ver a redis1 como maestro después de detener redis5. En WhatsApp la entrega se retrasa mientras no hay conexión, y la transparencia de fallos es parcial.
+
+\subsection{Escalabilidad bajo carga: ejemplo de mi entorno}
+
+Uso el SGA de la UTEQ en cada periodo de matrícula. En esa época va más lento que de costumbre. Al elegir materias y paralelos tarda más, y la pantalla de carga a veces pasa de 10~s. Esos 10~s son una estimación mía. No los medí con cronómetro ni anoté la fecha de un caso concreto.
+
+Muchos estudiantes hacen las mismas operaciones a la vez y el tiempo de respuesta sube. Eso sugiere que el sistema se degrada con el pico de demanda, aunque no tengo mediciones. No conozco su arquitectura y no sé si el cuello de botella está en el servidor de aplicación, en la base de datos o en la red.
+
+Mi hipótesis es que influyen las consultas repetidas sobre los mismos datos, como los paralelos y sus cupos, y que una caché de las que analizo aquí podría absorber esas lecturas. Es una hipótesis. No sé si el SGA usa una caché.
+
+\section{Comparación con Memcached}
+
+No monté Memcached. La comparación usa tres fuentes sobre Memcached y lo que observé en Redis. Cada celda indica de dónde sale el dato.
+
+\begin{table}[htbp]
+\centering
+\caption{Redis Cluster frente a Memcached.}
+\label{tab:comparacion}
+\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+Criterio & Redis Cluster & Memcached \\
+\midrule
+Distribución de claves & 16384 slots repartidos entre maestros; el clúster redirige con \texttt{MOVED} \cite{redis2026clusterspec}. Lo observé en mi montaje. & El cliente elige el servidor con un algoritmo de hash según la clave \cite[p.~7]{mishra2021memcached}. \\
+Comunicación entre nodos & Malla completa con gossip por el bus del clúster \cite{redis2026clusterspec}. & Los servidores no comparten datos entre sí \cite[p.~7]{mishra2021memcached}. \\
+Replicación y fallo de un nodo & Una réplica por maestro. Promoción automática en unos 8~s en mi prueba. & Sin replicación entre servidores, por lo anterior. No probé la caída de un servidor. Que sus claves dejen de estar disponibles es una inferencia mía. \\
+Política de expulsión & KLRU: expulsa el menos reciente de $K$ muestras elegidas al azar \cite[p.~1]{yang2023memcached}. & LRU o una variante segmentada (SegLRU) \cite[p.~1]{yang2023memcached}. \\
+Modelo de hilos y escalabilidad & Un solo hilo para procesar comandos \cite{bodra2025comparative}. & Escalabilidad casi lineal con hilos en cargas de lectura. Baja cuando la carga pasa a escritura \cite{yang2023memcached}. Es un estudio de una sola máquina. \\
+Seguridad & No la evalué y no tengo fuente. & UDP activo por defecto hasta la versión 1.5.5. Se recomienda bloquear el puerto 11211 y desactivar UDP \cite{mishra2021memcached}. \\
+Persistencia & Archivo de solo anexado o instantáneas \cite{bodra2025comparative}. Usé el primero. & Sin verificar: no tengo fuente. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Los dos sistemas dividen el trabajo de forma opuesta. En Redis Cluster el clúster conoce dónde está cada clave, la replica y reacciona a los fallos. En Memcached, según Mishra et~al., el servidor es simple, el cliente decide dónde va cada clave y los servidores no se hablan \cite{mishra2021memcached}. La evaluación de Mishra et~al.\ es un caso de estudio con tres servidores. Los cito para arquitectura y seguridad, y no para rendimiento.
+
+\section{Postura crítica}
+
+\subsection{Lo que funcionó}
+
+Redis Cluster detectó la caída de un maestro y promovió una réplica sin intervención mía. Los 16384 slots volvieron a quedar cubiertos y las 30 claves se pudieron leer. En la prueba C, 38 de 39 escrituras quedaron confirmadas y se leyeron después.
+
+\subsection{Lo que me preocupa}
+
+Una petición dirigida al maestro caído se bloqueó unos 38~s, mucho más que los 8~s de la promoción. Los roles quedaron cambiados respecto al estado inicial. Devolverle su rol a redis1 requeriría una acción manual que no probé. Mi evidencia sobre pérdida de escrituras es débil: una caída, un cliente y una escritura cerca del fallo.
+
+\subsection{Cuándo usar cada uno}
+
+Con mis datos, Redis Cluster sirve cuando hace falta recuperarse de la caída de un nodo sin intervención y se acepta una ventana corta con riesgo de pérdida. Los clientes deben tener tiempos de espera cortos. Para una caché de solo lecturas, donde perder los datos de un servidor significa volver a consultar la base de datos, el diseño simple de Memcached es defendible. No probé ninguno de los dos con esa carga.
+
+\subsection{Limitaciones}
+
+\begin{itemize}
+  \item Medí el tiempo de promoción una sola vez y con una resolución de unas décimas de segundo. No hay promedio ni dispersión.
+  \item No medí la ventana de errores de las escrituras. El escritor es secuencial y su único intento dirigido al maestro caído se bloqueó unos 38~s.
+  \item Tiré un solo maestro de tres, en un solo equipo con seis contenedores. No probé una partición de red ni la caída de un maestro junto con su réplica.
+  \item Bodra y Khairnar no reportan versiones de software y probaron un solo nodo, así que no uso sus cifras de latencia.
+  \item No probé Memcached. Su columna de la tabla depende de fuentes que describen otros contextos.
+\end{itemize}
+
+\section{Conclusiones}
+
+\begin{enumerate}
+  \item Al detener un maestro, una réplica fue vista como nuevo maestro 8.02~s después (una medición, con \texttt{cluster-node-timeout} de 5000~ms). La época de configuración subió de 7 a 8 y a 9 en las tres promociones.
+  \item Durante la caída se confirmaron 38 de 39 escrituras y las 38 se leyeron después. La otra quedó bloqueada unos 38~s por falta de tiempo de espera, no por un rechazo del clúster.
+  \item Mi resultado de no perder escrituras difiere del de Repin y Sidorov, que reportan pérdida de datos al fallar un líder o una réplica. Mi prueba es demasiado pequeña para explicar la diferencia.
+  \item Frente a Memcached, Redis Cluster ubica las claves en el clúster, las replica y promueve réplicas solo. Memcached deja la ubicación al cliente, no comparte datos entre servidores y usa LRU en vez de KLRU. Lo que no verifiqué está marcado en la tabla.
+\end{enumerate}
+
+\section{Declaración de uso de inteligencia artificial}
+
+Usé Claude (Anthropic) en la aplicación claude.ai. En la sesión del 13 de noviembre de 2026 el modelo era Claude Sonnet 5.5. Lo usé para planificar el trabajo, buscar y comprobar fuentes, redactar borradores de \texttt{comandos.md}, \texttt{resultados.md}, \texttt{ejemplos-entorno.md} y de este informe, y corregir errores de formato.
+
+Para verificar lo obtenido, ejecuté yo todos los comandos del experimento y comparé cada salida con lo escrito. Con Claude abrimos en el navegador el DOI de cada fuente, y comparé autores, año, revista, volumen y páginas con la página del editor. Comprobé en los PDF las páginas que cito: Repin y Sidorov (p.~9 y~11), Yang et~al.\ (p.~1) y Mishra et~al.\ (p.~7). Las observaciones sobre WhatsApp y el SGA son mías.
+
+\printbibliography[title={Referencias}]
+
+\appendix
+\section{Boceto a mano de la arquitectura}
+
+\captura{figuras/boceto-a-mano.jpeg}{0.85}{Boceto inicial de la arquitectura, dibujado a mano antes del experimento (Eduardo Reinoso, 12/11/2026).}
+
+\section{Capturas de lectura}
+
+Cada captura muestra el pasaje resaltado y la página.
+
+\begin{table}[htbp]
+\centering
+\caption{Capturas de lectura.}
+\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2cm}}
+\toprule
+Fuente & Pasaje & Página \\
+\midrule
+Repin y Sidorov \cite{repin2025distributed} & Pérdida de datos de Redis Cluster ante la falla de un nodo & 9 \\
+Repin y Sidorov \cite{repin2025distributed} & Tabla~6 & 11 \\
+Yang et~al.\ \cite{yang2023memcached} & Resumen: LRU o SegLRU en Memcached frente a KLRU en Redis & 1 \\
+Mishra et~al.\ \cite{mishra2021memcached} & Sección 4.1: los servidores de Memcached no comparten datos entre sí & 7 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\captura{capturas/lectura/lectura-1-repin-sidorov-p09.png}{0.95}{Lectura 1: Repin y Sidorov, p.~9.}
+\captura{capturas/lectura/lectura-1b-repin-sidorov-tabla6-p11.png}{0.95}{Lectura 1b: Repin y Sidorov, tabla~6, p.~11.}
+\captura{capturas/lectura/lectura-2-yang-memsys-p01.png}{0.95}{Lectura 2: Yang et~al., p.~1.}
+\captura{capturas/lectura/lectura-3-mishra-sec4-1-p07.png}{0.95}{Lectura 3: Mishra et~al., sección 4.1, p.~7.}
+
+\end{document}

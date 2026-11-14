@@ -26,7 +26,7 @@ reinoso/
 ├── informe.tex            archivo principal del informe
 ├── referencias.bib        referencias (IEEE, biblatex)
 ├── informe.pdf            PDF compilado
-├── figuras/               diagrama de arquitectura y boceto a mano (Anexo A)
+├── figuras/               arquitectura.drawio (fuente), arquitectura.pdf/.png y boceto-a-mano.jpeg (Anexo A)
 ├── capturas/              capturas de ejecución; capturas/lectura/ = Anexo B
 └── experimento/           docker-compose.yml, comandos.md y resultados.md
 ```
@@ -36,7 +36,7 @@ reinoso/
 - **Compilador:** pdflatex (MiKTeX 25.12 en Windows, desde TeXstudio; también válido TeX Live)
 - **Bibliografía:** biber (backend de biblatex)
 - **Archivo principal:** `informe.tex`
-- **Dependencias:** [PENDIENTE]
+- **Dependencias:** paquetes de LaTeX `babel` (español), `biblatex`, `csquotes`, `lmodern`, `geometry`, `graphicx`, `booktabs`, `array`, `tabularx`, `hyperref` y `caption`, y el programa `biber`. MiKTeX instala los que falten en la primera compilación.
 
 Ejecutar desde la carpeta `reinoso/`, en este orden:
 

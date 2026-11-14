@@ -39,9 +39,25 @@ Sistema analizado: Redis (comparado con Memcached)
 
 **Tiempo dedicado:** 4 horas
 
+---
 
-   ---
+## 2026-11-13 (viernes)
 
-   ## 2026-11-13 (viernes)
+**Qué hice**
+- Abrí el DOI de cada fuente y comparé autores, año, revista, volumen y páginas con la página del editor. Quité la fuente de DynamoDB (Elhemali) porque no aportaba a la comparación con Memcached.
+- Dejé `referencias.bib` con 8 fuentes y la especificación de Redis Cluster.
+- Leí las fuentes de Memcached (Yang y Mishra) y capturé los pasajes con su página para el Anexo B.
+- Escribí `informe.tex` y lo ajusté a la estructura de la guía: resumen, transparencias, modelos de comunicación, comparación con Memcached y postura crítica.
+- Hice el diagrama de arquitectura en `figuras/arquitectura.drawio` y lo exporté a PDF.
+- Completé el `README.md` con las dependencias y el orden de compilación.
 
-   [PENDIENTE]
+**Problemas encontrados**
+- No tenía una fuente académica para Memcached.
+
+**Cómo los resolví**
+- Encontré a Mishra (2021) y Yang (2023) y comprobé en los PDF lo que cito de cada uno.
+
+**Uso de IA**
+- Usé Claude para buscar y comprobar fuentes, redactar el borrador del informe y generar el borrador del diagrama. Abrí los DOI y los PDF yo mismo, y las observaciones de mi entorno son mías.
+
+**Tiempo dedicado:** __ horas
