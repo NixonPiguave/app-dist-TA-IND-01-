@@ -1,0 +1,28 @@
+﻿NAME           IMAGE                COMMAND                                                                                                                                                                  SERVICE   CREATED       STATUS         PORTS
+nats-nixon-1   nats:2.15.3-alpine   "docker-entrypoint.sh -js -sd /data -m 8222 -n nats-nixon-1 --cluster_name ta-ind-01-nixon --cluster nats://0.0.0.0:6222 --routes nats://nats2:6222,nats://nats3:6222"   nats1     3 hours ago   Up 9 minutes   127.0.0.1:4222->4222/tcp, 127.0.0.1:8222->8222/tcp
+nats-nixon-2   nats:2.15.3-alpine   "docker-entrypoint.sh -js -sd /data -m 8222 -n nats-nixon-2 --cluster_name ta-ind-01-nixon --cluster nats://0.0.0.0:6222 --routes nats://nats1:6222,nats://nats3:6222"   nats2     3 hours ago   Up 9 minutes   127.0.0.1:4223->4222/tcp, 127.0.0.1:8223->8222/tcp
+nats-nixon-3   nats:2.15.3-alpine   "docker-entrypoint.sh -js -sd /data -m 8222 -n nats-nixon-3 --cluster_name ta-ind-01-nixon --cluster nats://0.0.0.0:6222 --routes nats://nats1:6222,nats://nats2:6222"   nats3     3 hours ago   Up 9 minutes   127.0.0.1:4224->4222/tcp, 127.0.0.1:8224->8222/tcp
+Consulta de conexiones: puerto 8222
+
+remote_name 
+----------- 
+nats-nixon-3
+nats-nixon-2
+
+
+Consulta de conexiones: puerto 8223
+
+remote_name 
+----------- 
+nats-nixon-3
+nats-nixon-1
+
+
+Consulta de conexiones: puerto 8224
+
+remote_name 
+----------- 
+nats-nixon-1
+nats-nixon-2
+
+

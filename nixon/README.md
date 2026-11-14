@@ -18,21 +18,37 @@ Analizar las transparencias de distribución, CAP/PACELC, los modelos de comunic
 
 ## Estado del trabajo
 
-Se completó la primera ejecución local de NATS 2.15.3 con JetStream mediante Docker Compose. Se conservaron la configuración, los comandos, una captura original y la salida del inicio del servidor.
+Se ejecutó NATS 2.15.3 con JetStream en un clúster local de tres nodos. Se comprobaron sus conexiones y se creó el flujo MENSAJES_NIXON con tres réplicas y almacenamiento en disco. JetStream confirmó un mensaje propio con secuencia 1, que después se recuperó conectando el cliente a otro nodo.
 
-Las siguientes etapas incluyen configurar tres nodos y un flujo con tres réplicas, probar la mensajería y observar la caída y recuperación de un nodo. La investigación bibliográfica y el informe están pendientes.
+Se conservan el bosquejo inicial a mano, cuatro capturas de ejecución, las configuraciones y las salidas de las comprobaciones. Las pruebas de caída y recuperación, la investigación bibliográfica y el informe están pendientes.
 
-## Contenido actual
+## Procedimiento y configuraciones
 
 - [BITACORA.md](BITACORA.md): registro del trabajo realizado.
-- [experimento/comandos.md](experimento/comandos.md): procedimiento, explicación de los comandos e interpretación de la primera ejecución.
-- [experimento/compose.yaml](experimento/compose.yaml): configuración ejecutable de NATS con JetStream.
-- [experimento/resultado-inicio.txt](experimento/resultado-inicio.txt): estado del contenedor y registros de inicio.
-- [Primera captura de ejecución](evidencias/ejecucion/01-inicio-nats-jetstream.png): evidencia original del servidor en funcionamiento.
+- [experimento/comandos.md](experimento/comandos.md): comandos, evidencias, resultados e interpretación por etapas.
+- [experimento/compose.yaml](experimento/compose.yaml): configuración histórica de la primera ejecución con un servidor.
+- [experimento/compose-cluster.yaml](experimento/compose-cluster.yaml): configuración de los tres nodos; se selecciona con `docker compose -f compose-cluster.yaml` desde experimento/.
+
+## Resultados conservados
+
+- [Inicio del primer servidor](experimento/resultado-inicio.txt).
+- [Estado y conexiones del clúster](experimento/resultado-cluster.txt).
+- [Configuración del flujo antes de publicar mensajes](experimento/resultado-flujo.txt).
+- [Publicación y recuperación del mensaje](experimento/resultado-mensajeria.txt), incluida la incidencia de redirección en PowerShell y su resolución.
+
+## Evidencias
+
+| Archivo | Qué documenta |
+|---|---|
+| [Bosquejo a mano — Anexo A](evidencias/anexo-a/bosquejo-inicial-nats.png) | Representación inicial de la arquitectura con nombre y fecha. |
+| [Captura 01](evidencias/ejecucion/01-inicio-nats-jetstream.png) | Inicio de NATS con JetStream. |
+| [Captura 02](evidencias/ejecucion/02-conexiones-cluster-nats.png) | Conexiones de cada nodo con los otros dos. |
+| [Captura 03](evidencias/ejecucion/03-flujo-tres-replicas.png) | Flujo con tres réplicas, líder y seguidores. |
+| [Captura 04](evidencias/ejecucion/04-recuperacion-mensaje.png) | Recuperación del mensaje de secuencia 1 y código de salida 0. |
 
 ## Reproducción de la ejecución
 
-Se requiere Docker Desktop con contenedores Linux y Docker Compose. Consultar el [procedimiento del experimento](experimento/comandos.md) para iniciar el servidor, comprobar su estado y guardar los resultados.
+Se requiere Docker Desktop con contenedores Linux y Docker Compose. El [procedimiento del experimento](experimento/comandos.md) distingue la primera ejecución, el clúster, el flujo replicado y la prueba de mensajería, con los comandos utilizados y las salidas conservadas.
 
 ## Compilación del informe
 
@@ -41,4 +57,5 @@ Pendiente. Al incorporar el informe en LaTeX, se añadirán el compilador, el ar
 ## Video de sustentación
 
 Pendiente de grabación y publicación.
+
 
