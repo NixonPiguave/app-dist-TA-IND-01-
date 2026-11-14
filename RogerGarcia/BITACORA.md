@@ -19,4 +19,11 @@
 
 Los commits y las actualizaciones en GitHub los realizará personalmente el estudiante desde la página del repositorio, conservando la ruta `RogerGarcia/` y los nombres de archivo para mantener la trazabilidad.
 
+## 14 de noviembre de 2026 — Integración de evidencias
+
+- **Actividad:** incorporación de la fotografía del bosquejo, tres capturas de lectura y enlace al video; confirmación personal de los DOI.
+- **Comprobación:** correspondencia de cada captura con su fuente y recompilación del informe con anexos.
+
+**Tiempo comunicado por el estudiante:** aproximadamente 20–30 minutos de trabajo efectivo; sin desglose por día confirmado.
+
 Las entradas posteriores documentarán únicamente actividades reales, problemas, soluciones y tiempo efectivo. Las fechas del historial no se alterarán para aparentar días adicionales.

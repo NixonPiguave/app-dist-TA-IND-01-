@@ -4,6 +4,7 @@
 \usepackage[spanish,es-tabla]{babel}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{graphicx,booktabs,tabularx,csquotes,longtable,float,listings,tikz}
+\usepackage{pdflscape}
 \usetikzlibrary{arrows.meta}
 \usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
 \DefineBibliographyStrings{spanish}{artno={art.}}
@@ -12,12 +13,15 @@
 \input{datos.tex}
 \setlength{\parskip}{0.5em}
 \setlength{\emergencystretch}{2em}
-\newcommand{\pendiente}[1]{\par\noindent\textit{Pendiente: #1}\par}
 \lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible}
 \newcommand{\captura}[3]{%
   \begin{figure}[H]\centering
-  \IfFileExists{#1}{\includegraphics[width=.92\linewidth,height=.34\textheight,keepaspectratio]{#1}}%
-  {\fbox{\parbox{.85\linewidth}{Archivo pendiente: \texttt{\detokenize{#1}}}}}
+  \includegraphics[width=.92\linewidth,height=.34\textheight,keepaspectratio]{#1}
+  \caption{#2}\label{#3}
+  \end{figure}}
+\newcommand{\lectura}[3]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=\linewidth,height=11.5cm,keepaspectratio]{#1}
   \caption{#2}\label{#3}
   \end{figure}}
 
@@ -54,18 +58,20 @@ Carpeta individual: \texttt{\CarpetaEntrega}\par
 \section{Esquema inicial a mano}
 La figura corresponde al bosquejo que sirvió de base para el diagrama digital. Se conserva el nombre y la fecha escritos en el original.
 \begin{figure}[H]\centering
-\IfFileExists{figuras/bosquejo.jpg}
-  {\includegraphics[width=.85\linewidth,height=.72\textheight,keepaspectratio]{figuras/bosquejo.jpg}}
-  {\IfFileExists{figuras/bosquejo.png}
-    {\includegraphics[width=.85\linewidth,height=.72\textheight,keepaspectratio]{figuras/bosquejo.png}}
-    {\fbox{\parbox{.85\linewidth}{Pendiente guardar la fotografía original como \texttt{figuras/bosquejo.jpg} o \texttt{figuras/bosquejo.png}.}}}}
+\includegraphics[width=.85\linewidth,height=.72\textheight,keepaspectratio]{figuras/bosquejo.jpeg}
 \caption{Bosquejo original de Roger García, fechado el 13 de noviembre de 2026.}
 \label{fig:bosquejo}
 \end{figure}
 \clearpage
+\begin{landscape}
 \section{Evidencias de lectura}
-Las capturas deben mostrar los pasajes anotados y su página; no sustituyen el texto del artículo ni las citas bibliográficas.
-\captura{figuras/lectura-01.png}{Pasaje de Carvalho et al.: discusión del rendimiento según las cargas (pp.~14--16), relacionado con la comparación de la sección~\ref{sec:comparacion}.}{fig:lectura1}
-\captura{figuras/lectura-02.png}{Pasaje de Ferreira et al. sobre configuraciones de consistencia (pp.~3--4 o 7), relacionado con la sección~\ref{sec:cap}.}{fig:lectura2}
-\captura{figuras/lectura-03.png}{Pasaje de Khan et al. sobre bases documentales (p.~10), relacionado con la introducción.}{fig:lectura3}
+Las capturas muestran los pasajes subrayados y su página; corresponden a citas del informe y no sustituyen el texto completo del artículo.
+\lectura{figuras/lectura-02.png}{Pasaje de Carvalho et al.: discusión del rendimiento según las cargas (p.~16), relacionado con la comparación de la sección~\ref{sec:comparacion}.}{fig:lectura1}
+\end{landscape}
+\begin{landscape}
+\lectura{figuras/lectura-01.png}{Pasaje de Ferreira et al. sobre configuraciones de consistencia (p.~4), relacionado con la sección~\ref{sec:cap}.}{fig:lectura2}
+\end{landscape}
+\begin{landscape}
+\lectura{figuras/lectura-03.png}{Pasaje de Khan et al. sobre bases documentales (p.~10), relacionado con la introducción. Su uso se limita a la clasificación documental, no a afirmar superioridad general de una base.}{fig:lectura3}
+\end{landscape}
 \end{document}

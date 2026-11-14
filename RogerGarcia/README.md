@@ -18,9 +18,9 @@ El repositorio es compartido, pero esta carpeta reúne únicamente mi entrega in
 
 **Sistema principal:** MongoDB Community. **Comparador:** Apache CouchDB.
 
-Se completó la prueba de apagado y reincorporación del primario, con cuatro capturas y registros de ejecución. El informe sigue en desarrollo.
+Se completó la prueba de apagado y reincorporación del primario. Se incluyen el informe compilado, cuatro capturas del sistema, registros, bosquejo y evidencias de lectura.
 
-## Estructura inicial
+## Estructura
 
 ```text
 RogerGarcia/
@@ -35,14 +35,13 @@ RogerGarcia/
 ├── informe/
 │   ├── datos.tex
 │   ├── main.tex
+│   ├── main.pdf
 │   ├── contenido.tex
 │   ├── figuras/
 │   └── referencias.bib
 └── scripts/
     └── compilar.sh
 ```
-
-Las demás evidencias y el PDF final del informe se añadirán durante el desarrollo.
 
 ## Experimento
 
@@ -52,7 +51,7 @@ La [guía del laboratorio](experimento/GUIA.md) contiene los comandos y los [res
 
 Compilador: **pdfLaTeX**. Bibliografía: **Biber + biblatex, estilo IEEE**. Archivo principal: `informe/main.tex`.
 
-Dependencias: TeX Live con `babel-spanish`, `geometry`, `graphicx`, `booktabs`, `tabularx`, `longtable`, `float`, `listings`, `tikz` (PGF), `csquotes`, `biblatex`, `biblatex-ieee`, `biber` y `hyperref`; Bash para el script.
+Dependencias: TeX Live con `babel-spanish`, `geometry`, `graphicx`, `booktabs`, `tabularx`, `longtable`, `float`, `listings`, `tikz` (PGF), `pdflscape`, `csquotes`, `biblatex`, `biblatex-ieee`, `biber` y `hyperref`; Bash para el script.
 
 Desde la raíz del repositorio:
 
@@ -69,7 +68,7 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```
 
-Salida: `RogerGarcia/informe/main.pdf`. El borrador incluye análisis, resultados y bibliografía IEEE. Las imágenes de anexos que falten se muestran como pendientes y deben completarse antes de entregar.
+Salida: `RogerGarcia/informe/main.pdf`, con análisis, resultados, bibliografía IEEE y anexos. Las figuras y capturas deben conservar sus nombres y rutas para poder regenerarlo.
 
 ## Organización de la entrega
 
@@ -79,7 +78,9 @@ Las actualizaciones se subirán manualmente desde GitHub, conservando rutas y no
 
 ## Video de sustentación
 
-**Pendiente de grabación.** Aquí se incorporará el enlace accesible al video de 3–5 minutos, con rostro y voz.
+https://www.youtube.com/watch?v=tJPhstlVXvU
+
+Duración: 4 minutos y 26 segundos. Publicación no listada.
 
 ## Uso de inteligencia artificial
 
