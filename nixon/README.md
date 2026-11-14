@@ -22,11 +22,12 @@ Se ejecutó NATS 2.15.3 con JetStream en un clúster local de tres nodos. Se com
 
 Se realizó además una prueba de caída abrupta del líder mediante SIGKILL: nats3 asumió el liderazgo, se recuperó el mensaje anterior y se publicó y recuperó un segundo mensaje con nats1 detenido. Al reiniciar nats1, los tres nodos volvieron a figurar sincronizados y el flujo conservó los dos mensajes.
 
-Se conservan el bosquejo inicial a mano, siete capturas de ejecución, las configuraciones y las salidas de las comprobaciones. La investigación bibliográfica, el análisis comparativo y el informe están pendientes.
+Se conservan el bosquejo inicial a mano, siete capturas de ejecución, las configuraciones y las salidas de las comprobaciones. La bibliografía inicial reúne tres artículos de revista en inglés sobre NATS JetStream y Apache Pulsar, acompañados de cuatro capturas de lectura con fragmentos resaltados. Quedan pendientes ampliar las fuentes, desarrollar el análisis comparativo e integrar las citas y los anexos en el informe LaTeX.
 
 ## Procedimiento y configuraciones
 
 - [BITACORA.md](BITACORA.md): registro del trabajo realizado.
+- [informe/referencias.bib](informe/referencias.bib): bibliografía inicial exportada del proyecto LaTeX, con tres artículos de revista.
 - [experimento/comandos.md](experimento/comandos.md): procedimiento, comandos y forma de guardar las salidas.
 - [experimento/compose.yaml](experimento/compose.yaml): configuración histórica de la primera ejecución con un servidor.
 - [experimento/compose-cluster.yaml](experimento/compose-cluster.yaml): configuración de los tres nodos; se selecciona con `docker compose -f compose-cluster.yaml` desde experimento/.
@@ -57,6 +58,10 @@ Se conservan el bosquejo inicial a mano, siete capturas de ejecución, las confi
 | [Captura 05](evidencias/ejecucion/05-cambio-lider-tras-caida.png) | Nuevo líder y nodo detenido desactualizado. |
 | [Captura 06](evidencias/ejecucion/06-mensajeria-durante-caida.png) | Recuperación del mensaje anterior y publicación y recuperación de uno nuevo durante la caída. |
 | [Captura 07](evidencias/ejecucion/07-recuperacion-nodo-sincronizado.png) | Nodo reincorporado current, dos mensajes conservados y recuperación del mensaje 2. |
+| [Lectura 01 — Anexo B](evidencias/anexo-b/01-nats-comunicacion-asincrona-p485.png) | NATS JetStream como intermediario asíncrono y almacenamiento persistente; Ma’soem y Rukhviyanti, p. 485 (p. 4 del PDF). |
+| [Lectura 02 — Anexo B](evidencias/anexo-b/02-nats-eventos-entre-clusteres-p7.png) | Uso de NATS JetStream para distribuir eventos entre clústeres; Ju et al., p. 7. |
+| [Lectura 03 — Anexo B](evidencias/anexo-b/03-pulsar-separacion-capas-p4.png) | Separación entre servicio y almacenamiento y soporte multiusuario de Pulsar; Chy et al., p. 4. |
+| [Lectura 04 — Anexo B](evidencias/anexo-b/04-pulsar-condiciones-persistencia-p22.png) | Diferencias de persistencia entre las configuraciones evaluadas; Chy et al., p. 22. |
 
 ## Reproducción de la ejecución
 

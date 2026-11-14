@@ -37,6 +37,10 @@
 - Volví a iniciar nats1 y comprobé que se reincorporaba sincronizado, con los dos mensajes conservados.
 - Guardé las salidas y las capturas de la caída y la recuperación, y actualicé la documentación del experimento.
 
+- Seleccioné, con ayuda de Codex, tres artículos de revista en inglés: dos sobre aplicaciones de NATS JetStream y uno que evalúa Apache Pulsar.
+- Revisé los fragmentos seleccionados y los subrayé para conservar cuatro capturas de lectura con la página visible.
+- Preparé las referencias en mi proyecto LaTeX, exporté referencias.bib y lo incorporé a la carpeta informe/.
+
 ### Problema encontrado
 
 - Vi tarde el mensaje sobre la actividad y tuve que buscar, con ayuda de Codex, un sistema que no hubieran elegido mis compañeros de curso.
@@ -46,6 +50,8 @@
 
 - Durante la prueba provocada, el nodo que dirigía el flujo dejó de estar disponible y su copia quedó desactualizada mientras los otros nodos seguían funcionando.
 
+- El primer artículo propuesto era demasiado general para el análisis que quería realizar sobre NATS y Pulsar.
+
 ### Cómo lo resolví
 
 - Elegí NATS con JetStream como sistema principal y Apache Pulsar como sistema de comparación. Anuncié mi elección en el chat a las 19:49 del día anterior.
@@ -54,14 +60,17 @@
 
 - Comprobé que otro nodo asumiera el liderazgo y que pudiera recuperar y enviar mensajes. Después volví a iniciar el nodo detenido y verifiqué que se sincronizara y que los mensajes siguieran disponibles.
 
+- Cambié la selección por tres artículos en inglés relacionados directamente con los sistemas analizados.
+
 ### Tiempo dedicado
 
-4 Horas:
+6 Horas:
 -30 minutos de organización inicial  
 -1 hora de configuración y primera ejecución.
 -1 hora y 30 minutos de elaboración del bosquejo, configuración del clúster y prueba de mensajería.
 -1 hora de prueba de caída del nodo líder, comprobación de los mensajes y recuperación del nodo.
+-2 horas de búsqueda y selección de artículos, lectura de fragmentos, toma de capturas y preparación de referencias.
 
 ### Uso de IA
 
-- Usé Codex para planificar las actividades, buscar el sistema que analizaría, preparar la configuración de Docker Compose, redactar y revisar la documentación (comandos.md y README) y resolver la duplicación de los registros. Ejecuté personalmente los comandos y conservé sus salidas y capturas originales. La explicación del procedimiento se contrastó con esos registros.
+- Usé Codex para planificar las actividades, buscar el sistema que analizaría, preparar la configuración de Docker Compose, redactar y revisar la documentación (comandos.md y README) y resolver la duplicación de los registros. Para la busqueda de fuentes de informacion relacionadas a los sistemas usados y analizados. Ejecuté personalmente los comandos y conservé sus salidas y capturas originales. La explicación del procedimiento se contrastó con esos registros.
