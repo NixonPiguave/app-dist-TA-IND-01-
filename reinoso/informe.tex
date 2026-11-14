@@ -193,7 +193,7 @@ Las conexiones son TCP, tanto en el puerto de datos 6379 como en el bus 16379. N
 
 \subsection{Tolerancia a fallos}
 
-Kumari y Kaur clasifican las técnicas de tolerancia a fallos en reactivas y proactivas, y evalúan con tiempo de respuesta, rendimiento, fiabilidad y disponibilidad \cite{kumari2021survey}. Rehman et~al.\ también revisan enfoques proactivos y reactivos \cite{rehman2022fault}. Una técnica reactiva actúa después del fallo. En Redis Cluster las réplicas existen antes, pero la promoción empieza cuando se detecta la caída. Medida con esos criterios, la disponibilidad volvió en unos 8~s sin intervención mía. El costo fue una ventana sin maestro para 5461 slots, cerca de un tercio de las claves.
+Kumari y Kaur clasifican las técnicas de tolerancia a fallos en reactivas y proactivas, y listan parámetros para evaluarlas: tiempo de respuesta, rendimiento, fiabilidad y disponibilidad \cite{kumari2021survey}. Rehman et~al.\ también revisan enfoques proactivos y reactivos \cite{rehman2022fault}. Una técnica reactiva actúa después de que ocurre el fallo. Redis Cluster replica los datos antes del fallo, pero la promoción empieza recién cuando detecta la caída. En esas métricas, la disponibilidad volvió en unos 8~s sin intervención mía. El costo fue una ventana sin maestro para 5461 slots, cerca de un tercio del espacio de claves.
 
 Huang et~al.\ estudiaron 22 fallos metaestables en 11 organizaciones y reportan que al menos 4 de las 15 caídas grandes de AWS de la última década fueron de este tipo \cite{huang2022metastable}. Mi bloqueo de 38~s no es uno de esos fallos: fue un solo intento y nada amplificó la carga. Me deja una lección práctica. Un cliente real sin límite de espera puede quedarse esperando a un nodo caído, así que conviene poner tiempos de espera cortos y limitar los reintentos.
 
@@ -203,7 +203,7 @@ Uso WhatsApp todos los días. Cuando me quedo sin internet o activo el modo avi�
 
 En mi chat el orden queda distinto del real. Escribo un mensaje a las 8:30 y reconecto a las 9:00. Mientras tanto me llegaron mensajes a las 8:40. Mi mensaje aparece antes de esos, con la hora 8:30, aunque salió a las 9:00. La otra persona ve el orden real de envío. Dos clientes muestran órdenes distintos de la misma conversación.
 
-Es una observación de uso, no una medición. No anoté la fecha ni la hora de un caso concreto porque me pasa seguido. Tampoco sé cómo WhatsApp ordena los mensajes por dentro. Lo relaciono con el experimento porque en ambos casos hay un periodo en que cada parte ve un estado distinto: redis2 tardó unos 8~s en ver a redis1 como maestro. La transparencia ante fallos de WhatsApp es parcial: me avisa que el mensaje no salió, pero el orden final lo decide el sistema.
+Es una observación de uso, no una medición. No anoté la fecha ni la hora de un caso concreto porque me pasa seguido. Tampoco sé cómo WhatsApp ordena los mensajes por dentro. Lo relaciono con el experimento porque allí también los nodos vieron estados distintos durante un rato: redis2 tardó unos 8~s en ver a redis1 como maestro después de detener redis5. En WhatsApp la entrega se retrasa mientras no hay conexión, y la transparencia de fallos es parcial.
 
 \subsection{Escalabilidad bajo carga: ejemplo de mi entorno}
 
@@ -228,7 +228,7 @@ Criterio & Redis Cluster & Memcached \\
 \midrule
 Distribución de claves & 16384 slots repartidos entre maestros; el clúster redirige con \texttt{MOVED} \cite{redis2026clusterspec}. Lo observé en mi montaje. & El cliente elige el servidor con un algoritmo de hash según la clave \cite[p.~7]{mishra2021memcached}. \\
 Comunicación entre nodos & Malla completa con gossip por el bus del clúster \cite{redis2026clusterspec}. & Los servidores no comparten datos entre sí \cite[p.~7]{mishra2021memcached}. \\
-Replicación y fallo de un nodo & Una réplica por maestro. Promoción automática en unos 8~s en mi prueba. & Los servidores no comparten datos, así que no hay réplica entre ellos. Que sus claves queden sin servir si cae uno es inferencia mía: no lo probé. \\
+Replicación y fallo de un nodo & Una réplica por maestro. Promoción automática en unos 8~s en mi prueba. & Sin replicación entre servidores, por lo anterior. No probé la caída de un servidor. Que sus claves dejen de estar disponibles es una inferencia mía. \\
 Política de expulsión & KLRU: expulsa el menos reciente de $K$ muestras elegidas al azar \cite[p.~1]{yang2023memcached}. & LRU o una variante segmentada (SegLRU) \cite[p.~1]{yang2023memcached}. \\
 Modelo de hilos y escalabilidad & Un solo hilo para procesar comandos \cite{bodra2025comparative}. & Escalabilidad casi lineal con hilos en cargas de lectura. Baja cuando la carga pasa a escritura \cite{yang2023memcached}. Es un estudio de una sola máquina. \\
 Seguridad & No la evalué y no tengo fuente. & UDP activo por defecto hasta la versión 1.5.5. Se recomienda bloquear el puerto 11211 y desactivar UDP \cite{mishra2021memcached}. \\
@@ -270,7 +270,6 @@ Con mis datos, Redis Cluster sirve cuando hace falta recuperarse de la caída de
   \item Durante la caída se confirmaron 38 de 39 escrituras y las 38 se leyeron después. La otra quedó bloqueada unos 38~s por falta de tiempo de espera, no por un rechazo del clúster.
   \item Mi resultado de no perder escrituras difiere del de Repin y Sidorov, que reportan riesgo de pérdida de datos al fallar un nodo. Mi prueba es demasiado pequeña para explicar la diferencia.
   \item Frente a Memcached, Redis Cluster ubica las claves en el clúster, las replica y promueve réplicas solo. Memcached deja la ubicación al cliente, no comparte datos entre servidores y usa LRU en vez de KLRU. Lo que no verifiqué está marcado en la tabla.
-  \item Un cliente sin tiempo de espera puede quedar bloqueado unos 38~s contra un nodo caído. Hay que configurar tiempos de espera cortos.
 \end{enumerate}
 
 \section{Declaración de uso de inteligencia artificial}
