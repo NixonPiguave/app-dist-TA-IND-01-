@@ -52,6 +52,7 @@ Sistema analizado: Redis (comparado con Memcached)
 - Volví a leer la p. 9 y la tabla 6 de Repin y Sidorov contra mi captura y reescribí lo que cito: ellos dicen que Redis Cluster parece propenso a perder datos al fallar un nodo, y mi prueba no perdió ninguna escritura confirmada. Corregí "seis" por "siete" transparencias y el intervalo de consulta de la promoción (cada 200 ms).
 - Ajusté la conclusión sobre pérdida de escrituras y agregué una sobre tiempos de espera del cliente (38 s bloqueado). Compilé el PDF y revisé que no quedaran referencias sin resolver.
 - Completé el `README.md` con las dependencias y el orden de compilación.
+- Grabé el video de sustentación, lo subí a YouTube y puse el enlace en el `README.md`.
 
 **Problemas encontrados**
 - No tenía una fuente académica para Memcached.
@@ -66,4 +67,4 @@ Sistema analizado: Redis (comparado con Memcached)
 **Uso de IA**
 - Usé Claude para buscar y comprobar fuentes, redactar el borrador del informe y generar el borrador del diagrama y revisar la redacción. Abrí los DOI y los PDF yo mismo, y las observaciones de mi entorno son mías.
 
-**Tiempo dedicado:** 4 horas
+**Tiempo dedicado:** 5 horas

@@ -15,9 +15,7 @@
 
 ## Video de sustentación
 
-**Pendiente.** Todavía no está grabado porque no tengo electricidad en estas horas de la noche (13 de noviembre de 2026). El enlace se agrega en esta sección cuando esté subido.
-
-Enlace: [PENDIENTE]
+Enlace: https://youtu.be/ca0TVbOd5-Q
 
 ## Contenido de esta carpeta
 
